@@ -26,7 +26,7 @@
   "d1_databases": [
     { "binding": "DB", "database_name": "panbagi-db", "migrations_dir": "migrations" }
   ],
-  // New renders per visitor IP per minute (stored copies are not counted). Raise it if busy chats show the "잠시 쉬는 중" image.
+  // New renders per visitor IP per minute (stored copies are not counted). Over the limit: 429, try again after a minute.
   "ratelimits": [{ "name": "RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 120, "period": 60 } },
     // Wrong admin tokens per IP per minute.
     { "name": "AUTH_LIMITER", "namespace_id": "1002", "simple": { "limit": 30, "period": 60 } }],

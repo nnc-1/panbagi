@@ -12,13 +12,6 @@ const SLUG = /^[a-z0-9][a-z0-9-]{0,47}$/;
 const RESERVED = new Set(['admin', 'api']);
 const MIME: Record<Format, string> = { png: 'image/png', jpg: 'image/jpeg', webp: 'image/webp' };
 
-// Shown instead of a broken-image icon when a viewer hits the render rate limit.
-const BUSY_SVG =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="64" viewBox="0 0 320 64">' +
-  '<rect width="320" height="64" rx="10" fill="#f1f3f5" stroke="#ced4da"/>' +
-  '<text x="160" y="28" font-size="15" font-family="sans-serif" text-anchor="middle" fill="#495057">그림이 많아 잠시 쉬는 중이에요</text>' +
-  '<text x="160" y="48" font-size="13" font-family="sans-serif" text-anchor="middle" fill="#868e96">1분 뒤 새로고침해 주세요</text></svg>';
-
 const serverTiming = (t: Record<string, number>) => Object.entries(t).map(([k, v]) => `${k};dur=${v.toFixed(1)}`).join(', ');
 
 const app = new Hono<{ Bindings: Env }>();
@@ -109,13 +102,7 @@ app.get('/:chat/:file', async (c) => {
   if (env.RATE_LIMITER) {
     const ip = c.req.header('cf-connecting-ip') ?? 'anon';
     const { success } = await env.RATE_LIMITER.limit({ key: ip });
-    if (!success)
-      return c.body(BUSY_SVG, 429, {
-        'Content-Type': 'image/svg+xml; charset=utf-8',
-        'Retry-After': '60',
-        'Cache-Control': 'no-store',
-        'X-Content-Type-Options': 'nosniff',
-      });
+    if (!success) return c.text('too many requests', 429, { 'Retry-After': '60', 'Cache-Control': 'no-store' });
   }
   await initRaster(resvgWasm);
   if (format === 'webp') await initWebpEncoder(webpWasm);
