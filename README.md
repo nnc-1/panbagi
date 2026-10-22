@@ -25,7 +25,7 @@ https://내주소/채팅/템플릿.webp?name=도키&hp=72
    - **ADMIN_TOKEN**: 관리 화면 비밀번호예요. **16자 이상**으로 남이 짐작하기 어렵게 넣어요.
    - 빌드·배포 명령 칸은 손대지 않아요.
 3. **배포**를 누르고 1~3분 기다려요. 끝나면 `https://panbagi.○○○.workers.dev` 같은 임시 주소가 나와요(`○○○`는 내 계정 이름).
-4. **내 도메인 붙이기**: 대시보드 **Workers & Pages → panbagi → Settings → Domains & Routes → Add → Custom Domain**에 `img.내도메인.com`처럼 넣어요.
+4. **내 도메인 붙이기**: 대시보드 **Workers & Pages → panbagi → Settings → Domains & Routes → Add → Custom Domain**에 `svg.내도메인.com`처럼 넣어요.
    DNS 기록과 인증서는 Cloudflare가 자동으로 만들어요. 도메인은 같은 Cloudflare 계정에 있어야 하고, 몇 분 뒤부터 열려요.
 5. **임시 주소 끄기**: 이미지 주소에 계정 이름이 드러나지 않게 해요. 4단계 주소가 열리는 걸 확인한 뒤,
    GitHub의 **내 사본 저장소 → `wrangler.jsonc` → 연필(Edit) 버튼**을 눌러 `"workers_dev": true` 를 `"workers_dev": false` 로 바꾸고 **Commit changes**를 눌러요.
@@ -48,7 +48,7 @@ ADMIN_TOKEN을 잊어버렸으면 Cloudflare 대시보드 **Workers & Pages → 
 
 ### GitHub이 없거나 Windows에서 설치하고 싶다면
 
-코드를 **Code → Download ZIP**으로 받아 풀고 `설치.bat`을 더블클릭해요. 질문에 답하면 내 도메인 연결까지 해 주고, 나중에 같은 파일로 업데이트도 돼요.
+코드를 **Code → Download ZIP**으로 받아 풀고 `설치.bat`을 더블클릭해요. 계정에 있는 도메인 목록에서 번호를 고르면 `svg.내도메인.com` 같은 주소로 설치되고(DNS 자동), 나중에 같은 파일로 업데이트도 돼요.
 
 자세한 안내: [docs/설치.md](docs/설치.md) · 관리 화면 쓰는 법: [docs/관리-화면.md](docs/관리-화면.md) · 무료 플랜 CPU 재기: [docs/배포와-측정.md](docs/배포와-측정.md)
 

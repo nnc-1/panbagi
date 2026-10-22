@@ -74,16 +74,48 @@ const jsonIn = (text) => {
   return i < 0 ? undefined : JSON.parse(text.slice(i));
 };
 
-/** https://<name>.<account subdomain>.workers.dev, read from the Cloudflare API with wrangler's login. */
-async function workersDevBase(name, accountId) {
+/** GET from the Cloudflare API with wrangler's login. Undefined when it fails. */
+async function cfApi(path) {
   try {
     const t = jsonIn((await wrangler(['auth', 'token', '--json'], { capture: true })).out);
     const auth = t?.type === 'api_key' ? { 'X-Auth-Key': t.key, 'X-Auth-Email': t.email } : { Authorization: `Bearer ${t?.token}` };
-    const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/subdomain`, { headers: auth });
-    const sub = (await r.json())?.result?.subdomain;
-    return sub ? `https://${name}.${sub}.workers.dev` : '';
+    const j = await (await fetch(`https://api.cloudflare.com/client/v4${path}`, { headers: auth })).json();
+    return j?.success ? j.result : undefined;
   } catch {
-    return '';
+    return undefined;
+  }
+}
+
+/** https://<name>.<account subdomain>.workers.dev */
+async function workersDevBase(name, accountId) {
+  const sub = (await cfApi(`/accounts/${accountId}/workers/subdomain`))?.subdomain;
+  return sub ? `https://${name}.${sub}.workers.dev` : '';
+}
+
+/** Asks which address to use: a name under one of the account's domains (the usual case), else workers.dev. */
+async function askDomain(name, accountId) {
+  const zones = ((await cfApi(`/zones?account.id=${accountId}&per_page=50`)) ?? []).filter((z) => z.status === 'active').map((z) => z.name);
+  say('');
+  say('  이미지와 관리 화면을 내 도메인 아래 주소(예: svg.내도메인.com)로 써요. DNS와 인증서는 자동으로 만들어져요.');
+  if (zones.length) {
+    say('  이 계정에 있는 도메인:');
+    zones.forEach((z, i) => say(`    ${i + 1}. ${z}`));
+    say(`    0. 도메인 없이 임시 주소(https://${name}.<계정이름>.workers.dev) 쓰기`);
+    const n = Number(await ask('  쓸 도메인 번호', '1'));
+    if (!(n >= 1 && n <= zones.length)) return '';
+    const zone = zones[n - 1];
+    for (;;) {
+      const sub = (await ask(`  ${zone} 앞에 붙일 이름(영문 소문자, 숫자, -)`, 'svg')).toLowerCase();
+      if (/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(sub)) return `${sub}.${zone}`;
+      say('  영문 소문자, 숫자, -만 쓸 수 있어요.');
+    }
+  }
+  say('  이 계정에서 도메인을 찾지 못했어요. 도메인이 있으면 전체 주소(예: svg.example.com)를 넣고,');
+  say(`  없으면 Enter를 누르세요. 임시 주소(https://${name}.<계정이름>.workers.dev)로 설치하고, 나중에 도메인을 붙일 수 있어요.`);
+  for (;;) {
+    const d = (await ask('  쓸 주소', '')).toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+    if (!d || validDomain(d)) return d;
+    say(`  "${d}"은 주소 형식이 아니에요. 예: svg.example.com`);
   }
 }
 
@@ -162,10 +194,7 @@ async function main() {
     step(2, '설정 (모르면 Enter만 누르세요)');
     name = await ask('  Worker 이름(영문 소문자, 숫자, -)', name);
     if (!validName(name)) fail('Worker 이름은 영문 소문자, 숫자, -만 쓸 수 있어요.');
-    say('  내 도메인이 이 Cloudflare 계정에 있으면 그 아래 주소(예: svg.example.com)로 쓸 수 있어요.');
-    say('  비워 두면 https://' + name + '.<계정이름>.workers.dev 주소가 돼요.');
-    domain = (await ask('  쓸 주소(도메인)', '')).toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
-    if (domain && !validDomain(domain)) fail(`"${domain}"은 주소 형식이 아니에요. 예: svg.example.com`);
+    domain = await askDomain(name, accountId);
     say('  관리 화면 주소는 기본으로 /admin 이에요. 남이 짐작하기 어렵게 바꾸려면 이름을 넣으세요(예: my-panel_7).');
     adminPath = await ask('  관리 화면 주소(비우면 /admin)', '');
     if (adminPath && !validAdminPath(adminPath)) fail('관리 화면 주소는 영문, 숫자, -, _만 쓸 수 있고 admin, api는 안 돼요.');
