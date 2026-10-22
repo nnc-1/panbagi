@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks';
 import { normalizeParams } from '../../src/params';
-import type { Spec } from '../../src/spec';
+import { LIMITS, type Spec } from '../../src/spec';
 import { call, copy } from '../api';
 import { defaultsOf } from '../model';
 import { Modal, fail, toast } from '../ui';
@@ -25,7 +25,7 @@ export function promptSnippet(chat: string, slug: string, name: string, spec: Sp
     const desc = d.desc ? `${d.desc}. ` : '';
     let what = '';
     if (d.type === 'number') what = `숫자${d.min !== undefined || d.max !== undefined ? ` ${d.min ?? ''}~${d.max ?? ''}` : ''}${d.decimals ? ` (소수 ${d.decimals}자리)` : ''}`;
-    else if (d.type === 'text') what = `글자, 최대 ${d.maxLength ?? 40}자`;
+    else if (d.type === 'text') what = `글자, 최대 ${Math.min(d.maxLength ?? LIMITS.textLength, LIMITS.maxTextLength)}자`;
     else if (d.type === 'enum') what = `${d.options.join(', ')} 중 하나`;
     else what = '1(예) 또는 0(아니오)';
     return `- ${k}: ${desc}${what}`;
@@ -63,7 +63,7 @@ function ValueInput(p: { name: string; def: any; value: string; onChange: (v: st
       </select>
     );
   if (d.type === 'bool') return <input type="checkbox" checked={p.value === '1'} onChange={(e) => p.onChange(e.currentTarget.checked ? '1' : '0')} />;
-  return <input value={p.value} maxLength={d.maxLength ?? 40} onInput={(e) => p.onChange(e.currentTarget.value)} />;
+  return <input value={p.value} maxLength={Math.min(d.maxLength ?? LIMITS.textLength, LIMITS.maxTextLength)} onInput={(e) => p.onChange(e.currentTarget.value)} />;
 }
 
 export function PreviewPanel(p: {

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import type { AssetData } from '../../src/compose';
 import { validateSpec, type El, type Spec } from '../../src/spec';
 import { assetFile, get, send, type TemplateDetail } from '../api';
-import { clone, defaultsOf, getAt, insertAt, layout, listAt, moveTo, newElement, removeAt, updateAt, type Path, TYPE_LABEL } from '../model';
+import { clone, defaultsOf, getAt, insertAt, layout, listAt, moveTo, newElement, newTextBox, removeAt, updateAt, type Path, TYPE_LABEL } from '../model';
 import { assetsFor, fontsFor } from '../preview';
 import { normalizeParams } from '../../src/params';
 import { Modal, fail, toast, useData } from '../ui';
@@ -145,8 +145,8 @@ function EditorInner(p: { detail: TemplateDetail; onReload: (d: TemplateDetail) 
   // ---- element operations ----
   const sel0 = sel && getAt(spec, sel) ? sel : null;
   const selEl = sel0 ? getAt(spec, sel0)! : null;
-  const add = (type: El['type']) => {
-    const el = newElement(type, spec);
+  const add = (type: El['type'], box = false) => {
+    const el = box ? newTextBox(spec) : newElement(type, spec);
     // add inside the selected group, else next to the selection, else on top
     let parent: Path = [], index = spec.elements.length;
     if (selEl && (selEl.type === 'group' || selEl.type === 'repeat')) ((parent = sel0!), (index = 1e9));
@@ -286,6 +286,9 @@ function EditorInner(p: { detail: TemplateDetail; onReload: (d: TemplateDetail) 
             + {TYPE_LABEL[t]}
           </button>
         ))}
+        <button class="small" onClick={() => add('text', true)} title="여러 줄 글상자 추가 (박스 안에서 줄바꿈)">
+          + 글상자
+        </button>
         <span class="sep" />
         <button class="small ghost" disabled={!h.canUndo} onClick={h.undo} title="되돌리기 (Ctrl+Z)">
           ↶

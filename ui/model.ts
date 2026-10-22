@@ -1,5 +1,5 @@
 // Spec editing helpers: element paths, bounding boxes for the canvas, param renames.
-import { bind, estimateEm, interpolate, test } from '../src/compose';
+import { bind, estimateEm, interpolate, test, wrapLines } from '../src/compose';
 import type { El, Spec } from '../src/spec';
 import type { Values } from '../src/params';
 
@@ -90,6 +90,12 @@ export function newElement(type: El['type'], spec: Spec): El {
   }
 }
 
+/** a text element that wraps inside its box */
+export function newTextBox(spec: Spec): El {
+  const cx = Math.round(spec.canvas.w / 2 - 100), cy = Math.round(spec.canvas.h / 2 - 40);
+  return { type: 'text', name: '글상자', x: cx, y: cy, w: 200, h: 80, text: '여러 줄 글상자예요. 박스 너비에 맞춰 줄이 바뀌어요.', size: 16, fill: '#ffffff', wrap: true };
+}
+
 export function elLabel(e: El): string {
   if (e.name) return e.name;
   if (e.type === 'text' && typeof e.text === 'string') return e.text.slice(0, 24) || '글자';
@@ -178,7 +184,9 @@ export function layout(spec: Spec, values: Values): Box[] {
           if (e.align === 'center') bx = x - w / 2;
           else if (e.align === 'right') bx = x - w;
         }
-        b = place(path, { x: bx, y, w: Math.max(w, 4), h: n(e.h, size * 1.3) }, vis, own);
+        // a text box without h grows with its (estimated) lines
+        const autoH = e.wrap ? wrapLines(text, n(e.w), size, n(e.letterSpacing), estimateEm).length * size * n(e.lineHeight, 1.3) : size * 1.3;
+        b = place(path, { x: bx, y, w: Math.max(w, 4), h: n(e.h, autoH) }, vis, own);
         out.push(b);
       } else {
         let bb = { x, y, w: n(e.w), h: n(e.h) };

@@ -153,7 +153,7 @@ WebP 무손실은 디코드했을 때 PNG와 픽셀이 완전히 같아서(직�
 |---|---|
 | `shape` | `rect`(둥근 모서리 `radius`)·`ellipse`·`line`, 색/그래디언트(`{gradient:[a,b],dir}`)/테두리 |
 | `image` | 에셋 배치, `fit`: contain·cover·stretch |
-| `text` | `{param}` 치환, 필터 `{n|comma}` `{t|or:없음}` `{t|upper}` `{hp|pct:maxhp}`(hp÷maxhp를 0~100%로, 인자는 파라미터 이름이나 숫자, 기본 100), 폰트·굵기·정렬·`maxWidth`(넘치면 글자 크기를 줄임, 폭은 추정치)·`fit`(`w`를 넘칠 때 `"shrink"` 실제 폰트 글자 폭으로 줄이기, `minSize`까지 줄여도 넘치면 잘라냄 / `"clip"` 넘친 부분 숨기기) |
+| `text` | `{param}` 치환, 필터 `{n|comma}` `{t|or:없음}` `{t|upper}` `{hp|pct:maxhp}`(hp÷maxhp를 0~100%로, 인자는 파라미터 이름이나 숫자, 기본 100), 폰트·굵기·정렬·`maxWidth`(넘치면 글자 크기를 줄임, 폭은 추정치)·`fit`(`w`를 넘칠 때 `"shrink"` 실제 폰트 글자 폭으로 줄이기, `minSize`까지 줄여도 넘치면 잘라냄 / `"clip"` 넘친 부분 숨기기)·`wrap: true` 여러 줄 글상자(`w` 안에서 띄어쓰기마다 줄바꿈, 너무 긴 낱말은 글자 사이에서 끊음, Enter·값 속 `\n`도 줄바꿈, `lineHeight` 줄 간격 배수 기본 1.3, `valign` `top`/`middle`/`bottom`; `fit`은 `w`·`h` 박스 전체에 적용) |
 | `bar` | 값/최대 비율 게이지, 가로·세로 |
 | `repeat` | `count`만큼 `dx,dy`씩 옮겨 반복. 자식 문자열의 `$i`는 1부터 시작하는 번호(`{a$i}` → `{a1}`) |
 | `group` | 자식 묶음(이동·표시 조건·투명도) |
@@ -163,7 +163,7 @@ WebP 무손실은 디코드했을 때 PNG와 픽셀이 완전히 같아서(직�
 `when`: `{param, eq|ne|lt|lte|gt|gte|in}` 과 `and`/`or`/`not`.
 `switch`: `{switch:"param", cases:{...}, default}` · `steps`: `{steps:"param", stops:[{gte,value}], default}` — 어떤 속성에도 쓸 수 있습니다.
 
-한계: 한 줄 글자만(줄바꿈 없음), 애니메이션 없음, 그림자·필터 효과 없음. 캔버스 최대 4096, 출력 긴 변은 `MAX_PIXELS`(기본 2048)로 제한.
+한계: 애니메이션 없음, 그림자·필터 효과 없음. 캔버스 최대 4096, 출력 긴 변은 `MAX_PIXELS`(기본 2048)로 제한.
 
 ## 관리 API (`x-admin-token: <ADMIN_TOKEN>`)
 

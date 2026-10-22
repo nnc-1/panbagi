@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks';
-import type { ParamDef, Spec } from '../../src/spec';
+import { LIMITS, type ParamDef, type Spec } from '../../src/spec';
 import type { Asset } from '../api';
 import { AssetOptions } from '../folders';
 import { renameParam, usesParam } from '../model';
@@ -20,7 +20,6 @@ function ParamCard(p: { name: string; def: ParamDef; spec: Spec; onSpec: (s: Spe
     const base: any = { type: t, alias: d.alias, desc: d.desc };
     if (t === 'enum') base.options = ['none', 'A', 'B'];
     if (t === 'number') Object.assign(base, { default: 0, min: 0, max: 100 });
-    if (t === 'text') base.maxLength = 20;
     for (const k of Object.keys(base)) if (base[k] === undefined) delete base[k];
     p.onSpec({ ...p.spec, params: { ...p.spec.params, [p.name]: base } });
   };
@@ -81,7 +80,7 @@ function ParamCard(p: { name: string; def: ParamDef; spec: Spec; onSpec: (s: Spe
             </label>
             <label>
               최대 글자수
-              <NumInput value={d.maxLength} onChange={(v) => set({ maxLength: v })} placeholder="40" min={1} step={1} />
+              <NumInput value={d.maxLength} onChange={(v) => set({ maxLength: v })} placeholder={String(LIMITS.textLength)} min={1} max={LIMITS.maxTextLength} step={1} />
             </label>
           </>
         )}
