@@ -24,25 +24,27 @@ https://내주소/채팅/템플릿.webp?name=도키&hp=72
    - **D1 데이터베이스**, **R2 버킷**: "신규 생성" 그대로 둬요.
    - **ADMIN_TOKEN**: 관리 화면 비밀번호예요. **16자 이상**으로 남이 짐작하기 어렵게 넣어요.
    - 빌드·배포 명령 칸은 손대지 않아요.
-3. **배포**를 누르고 1~3분 기다려요. 끝나면 `https://panbagi.○○○.workers.dev` 같은 주소가 나와요.
-4. 그 주소 뒤에 `/admin`을 붙여 열고, ADMIN_TOKEN으로 들어가요.
-5. 처음 한 번 **"한글 폰트와 샘플 넣기"** 를 눌러요. 한글 폰트와 샘플 템플릿이 들어가요.
+3. **배포**를 누르고 1~3분 기다려요. 끝나면 `https://panbagi.○○○.workers.dev` 같은 임시 주소가 나와요(`○○○`는 내 계정 이름).
+4. **내 도메인 붙이기**: 대시보드 **Workers & Pages → panbagi → Settings → Domains & Routes → Add → Custom Domain**에 `img.내도메인.com`처럼 넣어요.
+   DNS 기록과 인증서는 Cloudflare가 자동으로 만들어요. 도메인은 같은 Cloudflare 계정에 있어야 하고, 몇 분 뒤부터 열려요.
+5. **임시 주소 끄기**: 이미지 주소에 계정 이름이 드러나지 않게 해요. 4단계 주소가 열리는 걸 확인한 뒤,
+   GitHub의 **내 사본 저장소 → `wrangler.jsonc` → 연필(Edit) 버튼**을 눌러 `"workers_dev": true` 를 `"workers_dev": false` 로 바꾸고 **Commit changes**를 눌러요.
+   1~2분 뒤 자동으로 다시 배포되면서 `workers.dev` 주소가 꺼져요(대시보드에서만 끄면 다음 배포 때 다시 켜져요).
+6. `https://내도메인/admin`을 열고 ADMIN_TOKEN으로 들어가요.
+7. 처음 한 번 **"한글 폰트와 샘플 넣기"** 를 눌러요. 한글 폰트와 샘플 템플릿이 들어가요.
+
+> 도메인이 없으면 4~5단계를 건너뛰고 임시 주소(`…workers.dev/admin`)로 써도 돼요.
 
 ### 꼭 적어 둘 것
 
 | 무엇 | 어디서 보나 | 왜 필요한가 |
 |---|---|---|
 | **ADMIN_TOKEN** (관리 토큰) | 2단계에서 직접 넣은 값. **다시 볼 수 없어요** | 관리 화면에 들어갈 때 |
-| **내 주소** | 3단계 끝에 나온 주소 (내 도메인을 붙였다면 그 주소) | 이미지 주소와 관리 화면 주소의 앞부분 |
+| **내 주소** | 4단계에서 붙인 내 도메인 (도메인이 없으면 3단계의 임시 주소) | 이미지 주소와 관리 화면 주소의 앞부분 |
 | **관리 화면 주소** | `내 주소/admin` (주소를 바꿨다면 바꾼 주소) | 템플릿을 만들고 고칠 때 |
 | **내 사본 저장소** | GitHub의 내 저장소 목록 (2단계에서 만들어진 것) | 업데이트하거나 설정을 바꿀 때 |
 
 ADMIN_TOKEN을 잊어버렸으면 Cloudflare 대시보드 **Workers & Pages → (내 Worker) → Settings → Variables and Secrets**에서 ADMIN_TOKEN을 새 값으로 바꾸면 돼요.
-
-### 내 도메인으로 쓰기 (선택)
-
-대시보드 **Workers & Pages → (내 Worker) → Settings → Domains & Routes → Add → Custom Domain**에 `img.내도메인.com`처럼 넣어요.
-도메인이 같은 Cloudflare 계정에 있어야 하고, 인증서가 만들어지는 몇 분 뒤부터 열려요.
 
 ### GitHub이 없거나 Windows에서 설치하고 싶다면
 
