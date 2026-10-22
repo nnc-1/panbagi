@@ -70,12 +70,15 @@ function EditorInner(p: { detail: TemplateDetail; onReload: (d: TemplateDetail) 
     else setPublishedJson(null);
   }, [p.detail.published_version]);
 
-  // keep preview values valid when params change
+  // keep preview values valid when params change; a value still at the old default follows the new default
+  const prevDefaults = useRef(defaultsOf(p.detail.draft));
   useEffect(() => {
+    const d = defaultsOf(spec);
+    const old = prevDefaults.current;
+    prevDefaults.current = d;
     setValues((v) => {
-      const d = defaultsOf(spec);
       const o: Record<string, string> = {};
-      for (const k of Object.keys(d)) o[k] = k in v ? v[k] : d[k];
+      for (const k of Object.keys(d)) o[k] = k in v && v[k] !== old[k] ? v[k] : d[k];
       return o;
     });
   }, [JSON.stringify(spec.params)]);

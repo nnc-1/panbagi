@@ -124,7 +124,7 @@ h3.folder-head { margin: 18px 0 0; font-size: 14px; } tr.folder-head td { backgr
 .field { display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; min-width: 0; } .lbl { color: var(--muted); } .lbl small { opacity: .8; }
 .field input, .field select { width: 100%; }
 .with-btn { display: flex; gap: 4px; align-items: center; } .with-btn > :first-child { flex: 1; min-width: 0; }
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; } .span2 { grid-column: span 2; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } .span2 { grid-column: span 2; }
 .color { display: flex; gap: 4px; align-items: center; width: 100%; } .color input[type=color] { width: 32px; height: 28px; padding: 1px; flex: none; } .color input:not([type]) { flex: 1; }
 .paint { display: flex; flex-direction: column; gap: 4px; width: 100%; }
 .bind { border: 1px solid var(--line); border-radius: 8px; padding: 8px; background: var(--bg); gap: 6px; }
