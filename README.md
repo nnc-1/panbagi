@@ -14,41 +14,53 @@ https://내주소/채팅/템플릿.webp?name=도키&hp=72
 
 **준비물**: Cloudflare 계정(무료), GitHub 계정. 둘 다 없으면 먼저 만들어 두세요.
 
+설치하면서 세 곳을 오가요. 단계마다 어디서 하는지 맨 앞에 적어 뒀어요.
+
+| 표시 | 어디 | 주소 |
+|---|---|---|
+| 🟠 **Cloudflare** | Cloudflare 대시보드 | <https://dash.cloudflare.com> |
+| ⚫ **GitHub** | GitHub 웹사이트 | <https://github.com> |
+| 🟢 **관리 화면** | 설치한 판박이의 관리 화면 | `https://내주소/admin` |
+| 💻 **내 컴퓨터** | 설치.bat으로 설치할 때만 | 내려받은 폴더 |
+
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/nnc-1/panbagi)
 
-1. 위 **Deploy to Cloudflare** 버튼을 누르고 Cloudflare에 로그인해요.
-2. **애플리케이션 설정** 화면에서
-   - **Git 계정**: "새로운 GitHub 연결"을 눌러 내 GitHub를 연결해요. 이 코드의 사본이 내 GitHub에 새 저장소로 만들어져요.
+1. ⚫ **GitHub** (지금 보고 있는 이 페이지): 위 **Deploy to Cloudflare** 버튼을 눌러요.
+   → 🟠 **Cloudflare** 로그인 화면으로 넘어가요. 로그인해요.
+2. 🟠 **Cloudflare** "애플리케이션 설정" 화면에서
+   - **Git 계정**: "새로운 GitHub 연결"을 눌러요. → ⚫ **GitHub** 창이 열리면 **Install / Authorize(허용)** 를 누르고, → 🟠 **Cloudflare** 화면으로 돌아와요.
+     이 코드의 사본이 내 GitHub에 새 저장소로 만들어져요(이 저장소를 나중에 5단계에서 써요).
    - **개인 Git 리포지토리 생성**: 체크하면 사본이 비공개가 돼요(추천).
-   - **프로젝트 이름**: 그대로 `panbagi`로 둬도 돼요. 주소에 들어가는 이름이에요.
+   - **프로젝트 이름**: 그대로 `panbagi`로 둬도 돼요. Worker 이름이에요.
    - **D1 데이터베이스**, **R2 버킷**: "신규 생성" 그대로 둬요.
-   - **ADMIN_TOKEN**: 관리 화면 비밀번호예요. **16자 이상**으로 남이 짐작하기 어렵게 넣어요.
+   - **ADMIN_TOKEN**: 관리 화면 비밀번호예요. **16자 이상**으로 남이 짐작하기 어렵게 넣고, 따로 적어 둬요.
    - 빌드·배포 명령 칸은 손대지 않아요.
-3. **배포**를 누르고 1~3분 기다려요. 끝나면 `https://panbagi.○○○.workers.dev` 같은 임시 주소가 나와요(`○○○`는 내 계정 이름).
-4. **내 도메인 붙이기**: 대시보드 **Workers & Pages → panbagi → Settings → Domains & Routes → Add → Custom Domain**에 `svg.내도메인.com`처럼 넣어요.
+3. 🟠 **Cloudflare**: **배포**를 누르고 1~3분 기다려요. 끝나면 `https://panbagi.○○○.workers.dev` 같은 임시 주소가 나와요(`○○○`는 내 계정 이름).
+4. 🟠 **Cloudflare** <https://dash.cloudflare.com> → 왼쪽 메뉴 **Workers & Pages → panbagi → Settings → Domains & Routes → Add → Custom Domain**에 `svg.내도메인.com`처럼 넣어요.
    DNS 기록과 인증서는 Cloudflare가 자동으로 만들어요. 도메인은 같은 Cloudflare 계정에 있어야 하고, 몇 분 뒤부터 열려요.
-5. **임시 주소 끄기**: 이미지 주소에 계정 이름이 드러나지 않게 해요. 4단계 주소가 열리는 걸 확인한 뒤,
-   GitHub의 **내 사본 저장소 → `wrangler.jsonc` → 연필(Edit) 버튼**을 눌러 `"workers_dev": true` 를 `"workers_dev": false` 로 바꾸고 **Commit changes**를 눌러요.
-   1~2분 뒤 자동으로 다시 배포되면서 `workers.dev` 주소가 꺼져요(대시보드에서만 끄면 다음 배포 때 다시 켜져요).
-6. `https://내도메인/admin`을 열고 ADMIN_TOKEN으로 들어가요.
-7. 처음 한 번 **"한글 폰트와 샘플 넣기"** 를 눌러요. 한글 폰트와 샘플 템플릿이 들어가요.
+5. ⚫ **GitHub** <https://github.com> → 오른쪽 위 내 프로필 → **Your repositories** → 2단계에서 만들어진 **내 사본 저장소** → `wrangler.jsonc` 파일 → 연필(✏️ Edit) 버튼.
+   `"workers_dev": true` 를 `"workers_dev": false` 로 바꾸고 **Commit changes**를 눌러요.
+   1~2분 뒤 🟠 Cloudflare가 자동으로 다시 배포하면서 임시 주소(`workers.dev`)가 꺼져요. 이미지 주소에 계정 이름이 드러나지 않게 하는 단계예요.
+   (4단계 주소가 열리는 걸 확인한 다음에 해요. 🟠 Cloudflare 화면에서만 끄면 다음 배포 때 다시 켜져요.)
+6. 🟢 **관리 화면**: 브라우저 주소창에 `https://svg.내도메인.com/admin`을 넣어 열고, ADMIN_TOKEN으로 들어가요.
+7. 🟢 **관리 화면**: 처음 한 번 **"한글 폰트와 샘플 넣기"** 를 눌러요. 한글 폰트와 샘플 템플릿이 들어가요.
 
-> 도메인이 없으면 4~5단계를 건너뛰고 임시 주소(`…workers.dev/admin`)로 써도 돼요.
+> 도메인이 없으면 4~5단계를 건너뛰고 임시 주소(`https://panbagi.○○○.workers.dev/admin`)로 써도 돼요.
 
 ### 꼭 적어 둘 것
 
 | 무엇 | 어디서 보나 | 왜 필요한가 |
 |---|---|---|
-| **ADMIN_TOKEN** (관리 토큰) | 2단계에서 직접 넣은 값. **다시 볼 수 없어요** | 관리 화면에 들어갈 때 |
-| **내 주소** | 4단계에서 붙인 내 도메인 (도메인이 없으면 3단계의 임시 주소) | 이미지 주소와 관리 화면 주소의 앞부분 |
-| **관리 화면 주소** | `내 주소/admin` (주소를 바꿨다면 바꾼 주소) | 템플릿을 만들고 고칠 때 |
-| **내 사본 저장소** | GitHub의 내 저장소 목록 (2단계에서 만들어진 것) | 업데이트하거나 설정을 바꿀 때 |
+| **ADMIN_TOKEN** (관리 토큰) | 2단계 🟠 Cloudflare 화면에서 직접 넣은 값. **다시 볼 수 없어요** | 🟢 관리 화면에 들어갈 때 |
+| **내 주소** | 4단계 🟠 Cloudflare에서 붙인 내 도메인 (도메인이 없으면 3단계의 임시 주소) | 이미지 주소와 관리 화면 주소의 앞부분 |
+| **관리 화면 주소** | `내 주소/admin` (주소를 바꿨다면 바꾼 주소) | 🟢 템플릿을 만들고 고칠 때 |
+| **내 사본 저장소** | ⚫ GitHub → Your repositories (2단계에서 만들어진 것) | 설정을 바꾸거나 업데이트할 때 |
 
-ADMIN_TOKEN을 잊어버렸으면 Cloudflare 대시보드 **Workers & Pages → (내 Worker) → Settings → Variables and Secrets**에서 ADMIN_TOKEN을 새 값으로 바꾸면 돼요.
+ADMIN_TOKEN을 잊어버렸으면 🟠 Cloudflare 대시보드 **Workers & Pages → (내 Worker) → Settings → Variables and Secrets**에서 ADMIN_TOKEN을 새 값으로 바꾸면 돼요.
 
 ### GitHub이 없거나 Windows에서 설치하고 싶다면
 
-코드를 **Code → Download ZIP**으로 받아 풀고 `설치.bat`을 더블클릭해요. 계정에 있는 도메인 목록에서 번호를 고르면 `svg.내도메인.com` 같은 주소로 설치되고(DNS 자동), 나중에 같은 파일로 업데이트도 돼요.
+⚫ **GitHub**(이 페이지)의 **Code → Download ZIP**으로 받아 💻 **내 컴퓨터**에 풀고 `설치.bat`을 더블클릭해요. 로그인할 때만 🟠 Cloudflare 창이 열려요. 계정에 있는 도메인 목록에서 번호를 고르면 `svg.내도메인.com` 같은 주소로 설치되고(DNS 자동), 나중에 같은 파일로 업데이트도 돼요.
 
 자세한 안내: [docs/설치.md](docs/설치.md) · 관리 화면 쓰는 법: [docs/관리-화면.md](docs/관리-화면.md) · 무료 플랜 CPU 재기: [docs/배포와-측정.md](docs/배포와-측정.md)
 
