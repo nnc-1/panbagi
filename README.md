@@ -36,6 +36,9 @@ https://내주소/채팅/템플릿.webp?name=도키&hp=72
    - **ADMIN_TOKEN**: 관리 화면 비밀번호예요. **16자 이상**으로 남이 짐작하기 어렵게 넣고, 따로 적어 둬요.
    - 빌드·배포 명령 칸은 손대지 않아요.
 3. 🟠 **Cloudflare**: **배포**를 누르고 1~3분 기다려요. 끝나면 `https://panbagi.○○○.workers.dev` 같은 임시 주소가 나와요(`○○○`는 내 계정 이름).
+
+   > **도메인이 없으면** 4~5단계를 건너뛰고 **6단계부터** 보세요. 6단계에서 내 도메인 주소 대신 임시 주소 `https://panbagi.○○○.workers.dev/admin`을 열면 돼요.
+
 4. 🟠 **Cloudflare** <https://dash.cloudflare.com> → 왼쪽 메뉴 **빌드 → 컴퓨트 → Workers 및 Pages**(영어 화면은 Compute → Workers & Pages)를 눌러요. 목록에서 **panbagi** → **설정(Settings)** → **맞춤 도메인 및 라우팅(Domains & Routes)** 칸의 파란 **+ 도메인 추가(Add domain)** 를 눌러요. 주소에 `svg.내도메인.com`처럼 넣고, **유형은 프로덕션(Production)** 을 골라요(미리보기는 시험용이라 고르지 않아요).
    DNS 기록과 인증서는 Cloudflare가 자동으로 만들어요. 도메인은 같은 Cloudflare 계정에 있어야 하고, 몇 분 뒤부터 열려요.
 5. ⚫ **GitHub** <https://github.com> → 오른쪽 위 내 프로필 → **Your repositories** → 2단계에서 만들어진 **내 사본 저장소** → `wrangler.jsonc` 파일 → 연필(✏️ Edit) 버튼.
@@ -46,10 +49,8 @@ https://내주소/채팅/템플릿.webp?name=도키&hp=72
    - ⚫ **GitHub**: 내 사본 저장소 첫 화면에서 방금 커밋 옆 표시를 봐요. 🟡 노란 점은 배포 중, ✅ 초록 체크는 끝, ❌ 빨간 X는 실패예요(눌러서 **Details**로 이유를 볼 수 있어요).
    - 🟠 **Cloudflare**: **Workers 및 Pages → panbagi → 배포(Deployments)** 맨 위에 방금 커밋 메시지가 보이면 끝이에요.
    - 마지막으로 브라우저에서 임시 주소 `https://panbagi.○○○.workers.dev`를 열어 봐요. 안 열리면(오류 화면) 잘 꺼진 거예요.
-6. 🟢 **관리 화면**: 브라우저 주소창에 `https://svg.내도메인.com/admin`을 넣어 열고, ADMIN_TOKEN으로 들어가요.
+6. 🟢 **관리 화면**: 브라우저 주소창에 `https://svg.내도메인.com/admin`(도메인이 없으면 `https://panbagi.○○○.workers.dev/admin`)을 넣어 열고, ADMIN_TOKEN으로 들어가요.
 7. 🟢 **관리 화면**: 처음 한 번 **"한글 폰트와 샘플 넣기"** 를 눌러요. 한글 폰트와 샘플 템플릿이 들어가요.
-
-> 도메인이 없으면 4~5단계를 건너뛰고 임시 주소(`https://panbagi.○○○.workers.dev/admin`)로 써도 돼요.
 
 ### 꼭 적어 둘 것
 
