@@ -1,0 +1,10 @@
+.dev.vars
+.wrangler/
+node_modules/
+/fonts/
+public/admin/app.js
+
+# Made by the installer for one Cloudflare account (database_id, domain), from wrangler.jsonc
+wrangler.local.jsonc
+# Portable Node.js downloaded by 설치.bat
+.node/

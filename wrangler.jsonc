@@ -1,0 +1,43 @@
+// 판박이 (panbagi). This file has no account values, so it works for anyone:
+// - "Deploy to Cloudflare" button: Cloudflare makes the R2 bucket and D1 database and writes their ids here.
+// - 설치.bat / `npm run setup`: copies this to wrangler.local.jsonc (git-ignored) with this account's
+//   database_id, account_id and domain, and always deploys with that file. Your "vars" there are kept on update.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "panbagi",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "triggers": { "crons": ["0 * * * *"] },
+  // Admin UI (https://<domain>/admin/). Static files are served by Cloudflare without running the Worker,
+  // so the UI costs no Worker CPU. `wrangler dev` / `wrangler deploy` build it first (ui/ -> public/admin/app.js).
+  // The admin UI files live in public/admin/ but are served through the Worker so their address can be changed
+  // (ADMIN_PATH secret). Only those requests run the Worker; it costs next to no CPU.
+  "assets": { "directory": "./public", "binding": "ASSETS", "not_found_handling": "none", "run_worker_first": ["/admin", "/admin/*"] },
+  "build": { "command": "npm run build:ui", "watch_dir": "ui" },
+  // ---- Address ------------------------------------------------------------------------------
+  // The installer asks for a domain. With one (it must be on the same Cloudflare account) it writes
+  // "routes": [{ "pattern": "<your domain>", "custom_domain": true }] and "workers_dev": false
+  // (DNS record and certificate are made for you). Without one it uses https://<name>.<account>.workers.dev.
+  "workers_dev": true,
+  "preview_urls": false,
+  "r2_buckets": [{ "binding": "STORE", "bucket_name": "panbagi-store" }],
+  // No database_id: Wrangler / the Deploy button create the database and link it (the installer fills it in).
+  "d1_databases": [
+    { "binding": "DB", "database_name": "panbagi-db", "migrations_dir": "migrations" }
+  ],
+  // New renders per visitor IP: 30 per 60s. Stored copies are not counted.
+  "ratelimits": [{ "name": "RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } }],
+  "vars": {
+    // Stored copies live this many hours (1..24). Browser/edge cache max-age follows it.
+    "RENDER_TTL_HOURS": "6",
+    // Multiplies every template's canvas.scale (0.25..2). Lower it if renders exceed the CPU limit.
+    "RENDER_SCALE": "1",
+    // Longest output side in pixels.
+    "MAX_PIXELS": "2048",
+    // JPG encoding is pure JS and slow (~100ms+). Keep off on the free plan.
+    "ENABLE_JPG": "false"
+  }
+  // ADMIN_TOKEN (16+ characters) and the optional ADMIN_PATH are secrets, set by the installer
+  // (or by the Deploy button form, or by hand: npx wrangler secret put ADMIN_TOKEN). Never write them in this file.
+}

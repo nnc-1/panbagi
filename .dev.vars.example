@@ -1,0 +1,3 @@
+# Admin password for the admin page (16+ characters). The Deploy button asks for it.
+# Local development: copy this file to .dev.vars and fill it in.
+ADMIN_TOKEN=

@@ -1,0 +1,624 @@
+{
+  "canvas": {
+    "w": 1040,
+    "h": 500,
+    "background": "#141a26"
+  },
+  "params": {
+    "name": {
+      "type": "text",
+      "default": "도키",
+      "maxLength": 12,
+      "alias": [
+        "u"
+      ],
+      "desc": "캐릭터 이름"
+    },
+    "title": {
+      "type": "text",
+      "default": "",
+      "maxLength": 16,
+      "desc": "칭호"
+    },
+    "level": {
+      "type": "number",
+      "default": 1,
+      "min": 1,
+      "max": 99,
+      "desc": "레벨"
+    },
+    "gold": {
+      "type": "number",
+      "default": 0,
+      "min": 0,
+      "max": 9999999,
+      "desc": "가진 돈"
+    },
+    "place": {
+      "type": "text",
+      "default": "",
+      "maxLength": 16,
+      "desc": "지금 있는 곳"
+    },
+    "hp": {
+      "type": "number",
+      "default": 100,
+      "min": 0,
+      "max": 100,
+      "alias": [
+        "health"
+      ],
+      "desc": "체력 %"
+    },
+    "mp": {
+      "type": "number",
+      "default": 100,
+      "min": 0,
+      "max": 100,
+      "desc": "마나 %"
+    },
+    "exp": {
+      "type": "number",
+      "default": 0,
+      "min": 0,
+      "max": 100,
+      "desc": "경험치 %"
+    },
+    "p1": {
+      "type": "enum",
+      "options": [
+        "none",
+        "전사",
+        "마법사",
+        "궁수",
+        "사제"
+      ],
+      "default": "none",
+      "desc": "동료 1 직업"
+    },
+    "p2": {
+      "type": "enum",
+      "options": [
+        "none",
+        "전사",
+        "마법사",
+        "궁수",
+        "사제"
+      ],
+      "default": "none",
+      "desc": "동료 2 직업"
+    },
+    "p3": {
+      "type": "enum",
+      "options": [
+        "none",
+        "전사",
+        "마법사",
+        "궁수",
+        "사제"
+      ],
+      "default": "none",
+      "desc": "동료 3 직업"
+    },
+    "p1n": {
+      "type": "text",
+      "default": "",
+      "maxLength": 10,
+      "desc": "동료 1 이름"
+    },
+    "p2n": {
+      "type": "text",
+      "default": "",
+      "maxLength": 10,
+      "desc": "동료 2 이름"
+    },
+    "p3n": {
+      "type": "text",
+      "default": "",
+      "maxLength": 10,
+      "desc": "동료 3 이름"
+    },
+    "quest": {
+      "type": "text",
+      "default": "",
+      "maxLength": 40,
+      "desc": "진행 중인 의뢰"
+    }
+  },
+  "assets": {
+    "coin": "icon-coin.svg",
+    "pin": "icon-pin.svg",
+    "shield": "icon-shield.svg"
+  },
+  "elements": [
+    {
+      "type": "shape",
+      "name": "바탕",
+      "x": 0,
+      "y": 0,
+      "w": 1040,
+      "h": 500,
+      "radius": 20,
+      "fill": {
+        "gradient": [
+          "#1d2638",
+          "#121722"
+        ]
+      },
+      "stroke": "#5fd0c0",
+      "strokeWidth": 2
+    },
+    {
+      "type": "shape",
+      "name": "프로필 카드",
+      "x": 20,
+      "y": 20,
+      "w": 320,
+      "h": 460,
+      "radius": 14,
+      "fill": "#1a2233",
+      "stroke": "#2c3a52",
+      "strokeWidth": 1.5
+    },
+    {
+      "type": "shape",
+      "name": "엠블럼",
+      "shape": "ellipse",
+      "x": 120,
+      "y": 44,
+      "w": 120,
+      "h": 120,
+      "fill": {
+        "gradient": [
+          "#2f6f78",
+          "#1b3440"
+        ]
+      },
+      "stroke": "#5fd0c0",
+      "strokeWidth": 2
+    },
+    {
+      "type": "image",
+      "asset": "shield",
+      "x": 150,
+      "y": 74,
+      "w": 60,
+      "h": 60
+    },
+    {
+      "type": "text",
+      "x": 40,
+      "y": 180,
+      "text": "{name}",
+      "size": 30,
+      "fill": "#e8eef7",
+      "w": 280,
+      "h": 42,
+      "weight": 700,
+      "align": "center",
+      "maxWidth": 280
+    },
+    {
+      "type": "text",
+      "x": 40,
+      "y": 224,
+      "text": "{title|or:떠돌이 모험가}",
+      "size": 16,
+      "fill": "#5fd0c0",
+      "w": 280,
+      "h": 24,
+      "align": "center"
+    },
+    {
+      "type": "shape",
+      "name": "레벨 알약",
+      "x": 130,
+      "y": 258,
+      "w": 100,
+      "h": 30,
+      "radius": 15,
+      "fill": "#5fd0c0"
+    },
+    {
+      "type": "text",
+      "x": 130,
+      "y": 258,
+      "text": "Lv.{level}",
+      "size": 15,
+      "fill": "#141a26",
+      "w": 100,
+      "h": 30,
+      "weight": 700,
+      "align": "center"
+    },
+    {
+      "type": "shape",
+      "name": "구분선",
+      "shape": "line",
+      "x": 40,
+      "y": 312,
+      "w": 280,
+      "h": 0,
+      "stroke": "#2c3a52",
+      "strokeWidth": 1
+    },
+    {
+      "type": "image",
+      "asset": "coin",
+      "x": 48,
+      "y": 332,
+      "w": 28,
+      "h": 28
+    },
+    {
+      "type": "text",
+      "x": 86,
+      "y": 332,
+      "text": "{gold|comma} G",
+      "size": 20,
+      "fill": "#e8eef7",
+      "w": 230,
+      "h": 28
+    },
+    {
+      "type": "image",
+      "asset": "pin",
+      "x": 48,
+      "y": 378,
+      "w": 28,
+      "h": 28
+    },
+    {
+      "type": "text",
+      "x": 86,
+      "y": 378,
+      "text": "{place|or:알 수 없는 곳}",
+      "size": 18,
+      "fill": "#e8eef7",
+      "w": 230,
+      "h": 28,
+      "maxWidth": 230
+    },
+    {
+      "type": "text",
+      "x": 48,
+      "y": 426,
+      "text": "상태",
+      "size": 15,
+      "fill": "#8b98ad",
+      "w": 60,
+      "h": 30
+    },
+    {
+      "type": "text",
+      "x": 110,
+      "y": 422,
+      "text": {
+        "steps": "hp",
+        "stops": [
+          {
+            "gte": 60,
+            "value": "양호"
+          },
+          {
+            "gte": 30,
+            "value": "주의"
+          }
+        ],
+        "default": "위험"
+      },
+      "size": 24,
+      "fill": {
+        "steps": "hp",
+        "stops": [
+          {
+            "gte": 60,
+            "value": "#7be0a0"
+          },
+          {
+            "gte": 30,
+            "value": "#f2c14e"
+          }
+        ],
+        "default": "#ff6b6b"
+      },
+      "w": 200,
+      "h": 36,
+      "weight": 700
+    },
+    {
+      "type": "shape",
+      "name": "능력치 카드",
+      "x": 360,
+      "y": 20,
+      "w": 660,
+      "h": 200,
+      "radius": 14,
+      "fill": "#1a2233",
+      "stroke": "#2c3a52",
+      "strokeWidth": 1.5
+    },
+    {
+      "type": "text",
+      "x": 384,
+      "y": 32,
+      "text": "능력치",
+      "size": 18,
+      "fill": "#5fd0c0",
+      "w": 200,
+      "h": 30,
+      "weight": 700
+    },
+    {
+      "type": "text",
+      "x": 384,
+      "y": 72,
+      "text": "HP",
+      "size": 15,
+      "fill": "#8b98ad",
+      "w": 80,
+      "h": 24
+    },
+    {
+      "type": "text",
+      "x": 384,
+      "y": 72,
+      "text": "{hp}/100",
+      "size": 15,
+      "fill": "#e8eef7",
+      "w": 612,
+      "h": 24,
+      "align": "right"
+    },
+    {
+      "type": "bar",
+      "name": "HP 게이지",
+      "x": 384,
+      "y": 98,
+      "w": 612,
+      "h": 12,
+      "radius": 6,
+      "value": "hp",
+      "max": 100,
+      "track": "#0c111b",
+      "fill": {
+        "steps": "hp",
+        "stops": [
+          {
+            "gte": 60,
+            "value": "#4fbf5a"
+          },
+          {
+            "gte": 30,
+            "value": "#e0b13c"
+          }
+        ],
+        "default": "#d6483f"
+      }
+    },
+    {
+      "type": "text",
+      "x": 384,
+      "y": 120,
+      "text": "MP",
+      "size": 15,
+      "fill": "#8b98ad",
+      "w": 80,
+      "h": 24
+    },
+    {
+      "type": "text",
+      "x": 384,
+      "y": 120,
+      "text": "{mp}/100",
+      "size": 15,
+      "fill": "#e8eef7",
+      "w": 612,
+      "h": 24,
+      "align": "right"
+    },
+    {
+      "type": "bar",
+      "name": "MP 게이지",
+      "x": 384,
+      "y": 146,
+      "w": 612,
+      "h": 12,
+      "radius": 6,
+      "value": "mp",
+      "max": 100,
+      "track": "#0c111b",
+      "fill": "#5b8def"
+    },
+    {
+      "type": "text",
+      "x": 384,
+      "y": 168,
+      "text": "EXP",
+      "size": 15,
+      "fill": "#8b98ad",
+      "w": 80,
+      "h": 24
+    },
+    {
+      "type": "text",
+      "x": 384,
+      "y": 168,
+      "text": "{exp}/100",
+      "size": 15,
+      "fill": "#e8eef7",
+      "w": 612,
+      "h": 24,
+      "align": "right"
+    },
+    {
+      "type": "bar",
+      "name": "EXP 게이지",
+      "x": 384,
+      "y": 194,
+      "w": 612,
+      "h": 12,
+      "radius": 6,
+      "value": "exp",
+      "max": 100,
+      "track": "#0c111b",
+      "fill": {
+        "gradient": [
+          "#b28dff",
+          "#7b5cff"
+        ],
+        "dir": "h"
+      }
+    },
+    {
+      "type": "shape",
+      "name": "파티 카드",
+      "x": 360,
+      "y": 236,
+      "w": 660,
+      "h": 150,
+      "radius": 14,
+      "fill": "#1a2233",
+      "stroke": "#2c3a52",
+      "strokeWidth": 1.5
+    },
+    {
+      "type": "text",
+      "x": 384,
+      "y": 248,
+      "text": "파티",
+      "size": 18,
+      "fill": "#5fd0c0",
+      "w": 200,
+      "h": 30,
+      "weight": 700
+    },
+    {
+      "type": "repeat",
+      "name": "파티원 3칸",
+      "x": 384,
+      "y": 288,
+      "dx": 210,
+      "count": 3,
+      "children": [
+        {
+          "type": "group",
+          "name": "파티원",
+          "x": 0,
+          "y": 0,
+          "children": [
+            {
+              "type": "shape",
+              "x": 0,
+              "y": 0,
+              "w": 192,
+              "h": 84,
+              "radius": 12,
+              "fill": "#212b40",
+              "stroke": "#2c3a52",
+              "strokeWidth": 1
+            },
+            {
+              "type": "text",
+              "x": 12,
+              "y": 6,
+              "text": "#$i",
+              "size": 12,
+              "fill": "#8b98ad",
+              "w": 40,
+              "h": 18
+            },
+            {
+              "type": "group",
+              "name": "있을 때",
+              "when": {
+                "param": "p$i",
+                "ne": "none"
+              },
+              "children": [
+                {
+                  "type": "image",
+                  "asset": "shield",
+                  "x": 12,
+                  "y": 34,
+                  "w": 32,
+                  "h": 32
+                },
+                {
+                  "type": "text",
+                  "x": 52,
+                  "y": 28,
+                  "text": "{p$i}",
+                  "size": 16,
+                  "fill": "#5fd0c0",
+                  "w": 130,
+                  "h": 22,
+                  "weight": 700
+                },
+                {
+                  "type": "text",
+                  "x": 52,
+                  "y": 52,
+                  "text": "{p$in|or:이름 없음}",
+                  "size": 16,
+                  "fill": "#e8eef7",
+                  "w": 130,
+                  "h": 24,
+                  "maxWidth": 130
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "x": 12,
+              "y": 36,
+              "text": "빈 자리",
+              "size": 18,
+              "fill": "#8b98ad",
+              "w": 170,
+              "h": 28,
+              "name": "없을 때",
+              "when": {
+                "param": "p$i",
+                "eq": "none"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "shape",
+      "name": "의뢰 카드",
+      "x": 360,
+      "y": 402,
+      "w": 660,
+      "h": 78,
+      "radius": 14,
+      "fill": "#1a2233",
+      "stroke": "#2c3a52",
+      "strokeWidth": 1.5
+    },
+    {
+      "type": "text",
+      "x": 384,
+      "y": 412,
+      "text": "진행 중인 의뢰",
+      "size": 15,
+      "fill": "#5fd0c0",
+      "w": 200,
+      "h": 24
+    },
+    {
+      "type": "text",
+      "x": 384,
+      "y": 436,
+      "text": "{quest|or:없음}",
+      "size": 20,
+      "fill": "#e8eef7",
+      "w": 612,
+      "h": 32,
+      "maxWidth": 612
+    }
+  ]
+}

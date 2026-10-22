@@ -1,0 +1,19 @@
+{
+  "canvas": { "w": 400, "h": 140, "background": "#141a26" },
+  "params": {
+    "name": { "type": "text", "default": "도키", "maxLength": 12, "alias": ["u"], "desc": "캐릭터 이름" },
+    "hp": { "type": "number", "default": 100, "min": 0, "max": 100, "alias": ["health"], "desc": "체력 %" },
+    "mp": { "type": "number", "default": 100, "min": 0, "max": 100, "desc": "마나 %" },
+    "gold": { "type": "number", "default": 0, "min": 0, "max": 9999999, "desc": "가진 돈" }
+  },
+  "elements": [
+    { "type": "shape", "name": "바탕", "x": 0, "y": 0, "w": 400, "h": 140, "radius": 12, "fill": "#1a2233", "stroke": "#5fd0c0", "strokeWidth": 2 },
+    { "type": "text", "x": 20, "y": 12, "w": 240, "h": 34, "text": "{name}", "size": 24, "weight": 700, "fill": "#e8eef7", "maxWidth": 220 },
+    { "type": "text", "x": 240, "y": 16, "w": 140, "h": 26, "text": "{gold|comma} G", "size": 16, "fill": "#f2c14e", "align": "right" },
+    { "type": "text", "x": 20, "y": 56, "w": 200, "h": 20, "text": "HP {hp}/100", "size": 14, "fill": "#8b98ad" },
+    { "type": "bar", "name": "HP 게이지", "x": 20, "y": 80, "w": 360, "h": 12, "radius": 6, "value": "hp", "max": 100, "track": "#0c111b",
+      "fill": { "steps": "hp", "stops": [{ "gte": 60, "value": "#4fbf5a" }, { "gte": 30, "value": "#e0b13c" }], "default": "#d6483f" } },
+    { "type": "text", "x": 20, "y": 98, "w": 200, "h": 20, "text": "MP {mp}/100", "size": 14, "fill": "#8b98ad" },
+    { "type": "bar", "name": "MP 게이지", "x": 20, "y": 120, "w": 360, "h": 8, "radius": 4, "value": "mp", "max": 100, "track": "#0c111b", "fill": "#5b8def" }
+  ]
+}

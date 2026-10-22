@@ -1,0 +1,49 @@
+{
+  "name": "panbagi",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "description": "Cloudflare Worker that composes character-chat HUD images (SVG -> WebP/PNG/JPG) and stores them in R2",
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "dev": "wrangler dev",
+    "deploy": "wrangler d1 migrations apply DB --remote && wrangler deploy",
+    "migrate:local": "wrangler d1 migrations apply DB --local",
+    "migrate": "wrangler d1 migrations apply DB --remote",
+    "seed": "node scripts/seed.mjs",
+    "typecheck": "tsc --noEmit && tsc -p ui --noEmit",
+    "build:ui": "esbuild ui/main.tsx --bundle --minify --format=esm --target=es2022 --jsx=automatic --jsx-import-source=preact --outfile=public/admin/app.js",
+    "test": "vitest run",
+    "render:sample": "node scripts/run-ts.mjs scripts/render-sample.mjs",
+    "font:subset": "node scripts/make-fonts.mjs"
+  },
+  "cloudflare": {
+    "label": "판박이",
+    "products": ["Workers", "R2", "D1"],
+    "categories": ["storage"],
+    "bindings": {
+      "ADMIN_TOKEN": {
+        "description": "관리 화면에 들어갈 때 쓰는 비밀번호예요. **16자 이상**으로, 남이 짐작하기 어렵게 정하고 따로 적어 두세요."
+      },
+      "STORE": { "description": "그린 그림, 에셋, 폰트를 담는 저장소(R2)예요. 이름은 그대로 둬도 돼요." },
+      "DB": { "description": "템플릿과 설정을 담는 데이터베이스(D1)예요. 이름은 그대로 둬도 돼요." }
+    }
+  },
+  "dependencies": {
+    "@jsquash/webp": "1.5.0",
+    "@resvg/resvg-wasm": "2.6.2",
+    "hono": "^4.13.13",
+    "jpeg-js": "^0.4.4",
+    "preact": "10.29.8"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261022.1",
+    "@types/node": "^26.6.5",
+    "esbuild": "0.28.2",
+    "subset-font": "^2.9.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5",
+    "wrangler": "^4.151.3"
+  }
+}
