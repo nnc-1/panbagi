@@ -7,7 +7,7 @@ import { sanitizeSvg } from '../src/sanitize';
 import { validateSpec, type Spec } from '../src/spec';
 import { purgeExpired } from '../src/store';
 import type { Env } from '../src/env';
-import { readConfig } from '../src/env';
+import { clientKey, readConfig } from '../src/env';
 import { admin } from '../src/admin';
 
 const hud: Spec = JSON.parse(readFileSync('samples/hud.json', 'utf8'));
@@ -138,6 +138,11 @@ describe('sanitizeSvg', () => {
     expect(out).toContain('href="#a"');
   });
   it('rejects non-svg', () => expect(sanitizeSvg('hello')).toBeNull());
+  it('drops external refs under any namespace prefix', () => {
+    const out = sanitizeSvg(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink"><image xl:href="https://evil/x.png" ev:onclick="x()"/><use xl:href="#a"/></svg>`)!;
+    expect(out).not.toMatch(/evil|onclick/);
+    expect(out).toContain('xl:href="#a"');
+  });
 });
 
 describe('config & purge', () => {
@@ -209,5 +214,37 @@ describe('admin auth', () => {
   it('rejects wrong tokens', async () => {
     expect((await call({ ADMIN_TOKEN: 'x'.repeat(20) }, 'y'.repeat(20))).status).toBe(401);
     expect((await call({ ADMIN_TOKEN: 'x'.repeat(20) })).status).toBe(401);
+  });
+});
+
+describe('rate limit keys', () => {
+  it('counts IPv4 per address and IPv6 per /64', () => {
+    expect(clientKey('203.0.113.7')).toBe('203.0.113.7');
+    expect(clientKey(undefined)).toBe('anon');
+    expect(clientKey('2001:db8:1:2:aaaa::1')).toBe('2001:db8:1:2::/64');
+    expect(clientKey('2001:DB8:1:2:ffff:ffff:ffff:ffff')).toBe('2001:db8:1:2::/64');
+    expect(clientKey('2001:db8::1')).toBe('2001:db8:0:0::/64');
+    expect(clientKey('::1')).toBe('0:0:0:0::/64');
+    expect(clientKey('::ffff:198.51.100.2')).toBe('::ffff:198.51.100.2');
+  });
+});
+
+describe('admin auth lockout', () => {
+  const good = 'g'.repeat(20);
+  const limiter = (n: number) => {
+    let used = 0;
+    return { limit: async () => ({ success: ++used <= n }) };
+  };
+  const call = (env: Partial<Env>, token: string, ip: string) =>
+    admin.request('/settings', { headers: { 'x-admin-token': token, 'cf-connecting-ip': ip } }, env as Env);
+  it('refuses even the right token once an address is over the limit', async () => {
+    const env = { ADMIN_TOKEN: good, AUTH_LIMITER: limiter(2), DB: { prepare: () => ({ all: async () => ({ results: [] }) }) } } as any;
+    expect((await call(env, 'w'.repeat(20), '2001:db8:9:9::1')).status).toBe(401);
+    expect((await call(env, 'w'.repeat(20), '2001:db8:9:9::2')).status).toBe(401);
+    expect((await call(env, 'w'.repeat(20), '2001:db8:9:9::3')).status).toBe(429);
+    // same /64, right token: still locked
+    expect((await call(env, good, '2001:db8:9:9::4')).status).toBe(429);
+    // another address is not affected
+    expect((await call(env, good, '198.51.100.9')).status).toBe(200);
   });
 });

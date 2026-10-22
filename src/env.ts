@@ -32,3 +32,17 @@ export function readConfig(env: Env): Config {
     enableJpg: env.ENABLE_JPG === 'true',
   };
 }
+
+/**
+ * Who a rate limit counts: the IPv4 address, or the /64 network of an IPv6 address
+ * (one home or phone line gets a whole /64, so counting single IPv6 addresses is easy to dodge).
+ */
+export function clientKey(ip: string | undefined): string {
+  if (!ip) return 'anon';
+  if (!ip.includes(':') || ip.includes('.')) return ip; // IPv4, or IPv4 written as IPv6 (::ffff:1.2.3.4)
+  const [head, tail] = ip.toLowerCase().split('::');
+  const h = head ? head.split(':') : [];
+  const t = tail ? tail.split(':') : [];
+  const groups = tail === undefined ? h : [...h, ...Array(Math.max(0, 8 - h.length - t.length)).fill('0'), ...t];
+  return groups.slice(0, 4).map((g) => (parseInt(g, 16) || 0).toString(16)).join(':') + '::/64';
+}

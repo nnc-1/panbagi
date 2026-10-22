@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import resvgWasm from '@resvg/resvg-wasm/index_bg.wasm';
 import webpWasm from '@jsquash/webp/codec/enc/webp_enc_simd.wasm';
 import { admin } from './admin';
-import { readConfig, type Env } from './env';
+import { clientKey, readConfig, type Env } from './env';
 import { initRaster, initWebpEncoder, type Format } from './raster';
 import { normalizeParams } from './params';
 import { renderImage } from './render';
@@ -100,8 +100,7 @@ app.get('/:chat/:file', async (c) => {
 
   // 3) render. Only new renders are rate limited; stored copies are cheap to serve.
   if (env.RATE_LIMITER) {
-    const ip = c.req.header('cf-connecting-ip') ?? 'anon';
-    const { success } = await env.RATE_LIMITER.limit({ key: ip });
+    const { success } = await env.RATE_LIMITER.limit({ key: clientKey(c.req.header('cf-connecting-ip')) });
     if (!success) return c.text('too many requests', 429, { 'Retry-After': '60', 'Cache-Control': 'no-store' });
   }
   await initRaster(resvgWasm);

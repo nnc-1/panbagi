@@ -11,9 +11,10 @@ export function sanitizeSvg(text: string): string | null {
     .replace(/<script[\s\S]*?<\/script\s*>/gi, '')
     .replace(/<script[^>]*\/>/gi, '')
     .replace(/<foreignObject[\s\S]*?<\/foreignObject\s*>/gi, '')
-    .replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*')/gi, '');
+    .replace(/\s([\w.-]+:)?on[a-z]+\s*=\s*("[^"]*"|'[^']*')/gi, '');
   // href / xlink:href may only point inside the document (#id) or carry data: images.
-  s = s.replace(/\s(xlink:)?href\s*=\s*("([^"]*)"|'([^']*)')/gi, (m, _x, _q, a, b) => {
+  // any prefix counts (xlink:href, or the same namespace bound as xl:href)
+  s = s.replace(/\s([\w.-]+:)?href\s*=\s*("([^"]*)"|'([^']*)')/gi, (m, _x, _q, a, b) => {
     const v = (a ?? b ?? '').trim();
     return v.startsWith('#') || /^data:image\/(png|jpe?g|webp|gif);/i.test(v) ? m : '';
   });
