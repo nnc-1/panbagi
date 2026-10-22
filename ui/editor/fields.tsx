@@ -158,7 +158,7 @@ export function BindField(p: { label: string; value: unknown; onChange: (v: unkn
             <AddCase
               suggestions={def?.type === 'enum' ? def.options : def?.type === 'bool' ? ['true', 'false'] : []}
               existing={Object.keys(v.cases ?? {})}
-              onAdd={(k) => set({ cases: { ...v.cases, [k]: v.default } })}
+              onAdd={(keys) => set({ cases: { ...v.cases, ...Object.fromEntries(keys.map((k) => [k, v.default])) } })}
             />
           </>
         )}
@@ -203,7 +203,7 @@ export function BindField(p: { label: string; value: unknown; onChange: (v: unkn
   );
 }
 
-function AddCase(p: { suggestions: string[]; existing: string[]; onAdd: (k: string) => void }) {
+function AddCase(p: { suggestions: string[]; existing: string[]; onAdd: (keys: string[]) => void }) {
   const [k, setK] = useState('');
   const left = p.suggestions.filter((s) => !p.existing.includes(s));
   return (
@@ -214,11 +214,11 @@ function AddCase(p: { suggestions: string[]; existing: string[]; onAdd: (k: stri
           <option key={s} value={s} />
         ))}
       </datalist>
-      <button class="small" disabled={!k || p.existing.includes(k)} onClick={() => (p.onAdd(k), setK(''))}>
+      <button class="small" disabled={!k || p.existing.includes(k)} onClick={() => (p.onAdd([k]), setK(''))}>
         + 경우
       </button>
       {!!left.length && (
-        <button class="small ghost" onClick={() => left.forEach(p.onAdd)}>
+        <button class="small ghost" onClick={() => p.onAdd(left)}>
           모두 추가
         </button>
       )}

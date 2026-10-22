@@ -67,7 +67,7 @@ ADMIN_TOKEN을 잊어버렸으면 🟠 Cloudflare 대시보드 왼쪽 메뉴 **�
 
 ⚫ **GitHub**(이 페이지)의 **Code → Download ZIP**으로 받아 💻 **내 컴퓨터**에 풀고 `설치.bat`을 더블클릭해요. 로그인할 때만 🟠 Cloudflare 창이 열려요. 계정에 있는 도메인 목록에서 번호를 고르면 `svg.내도메인.com` 같은 주소로 설치되고(DNS 자동), 나중에 같은 파일로 업데이트도 돼요.
 
-자세한 안내: [docs/설치.md](docs/설치.md) · 관리 화면 쓰는 법: [docs/관리-화면.md](docs/관리-화면.md) · 무료 플랜 CPU 재기: [docs/배포와-측정.md](docs/배포와-측정.md)
+자세한 안내: [docs/설치.md](docs/설치.md) · 관리 화면 쓰는 법: [docs/관리-화면.md](docs/관리-화면.md) · 처음 만드는 법: [docs/템플릿-만들기.md](docs/템플릿-만들기.md) · 무료 플랜 CPU 재기: [docs/배포와-측정.md](docs/배포와-측정.md)
 
 ## 관리 화면 (`/admin`)
 

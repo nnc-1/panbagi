@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { LIMITS, type ParamDef, type Spec } from '../../src/spec';
 import type { Asset } from '../api';
 import { AssetOptions } from '../folders';
@@ -7,6 +7,14 @@ import { NumInput } from './fields';
 
 const NAME = /^[A-Za-z_][A-Za-z0-9_]{0,31}$/;
 const TYPE_LABEL = { text: '글자', number: '숫자', enum: '목록에서 하나', bool: '예/아니오' } as const;
+
+/** Comma-separated list, applied when the field loses focus. Keeps what was typed across re-renders until then. */
+function ListInput(p: { value?: string[]; onChange: (v: string[]) => void }) {
+  const joined = (p.value ?? []).join(', ');
+  const [txt, setTxt] = useState(joined);
+  useEffect(() => setTxt(joined), [joined]);
+  return <input value={txt} onInput={(e) => setTxt(e.currentTarget.value)} onChange={(e) => p.onChange(e.currentTarget.value.split(',').map((s) => s.trim()).filter(Boolean))} />;
+}
 
 function ParamCard(p: { name: string; def: ParamDef; spec: Spec; onSpec: (s: Spec) => void }) {
   const d: any = p.def;
@@ -88,7 +96,7 @@ function ParamCard(p: { name: string; def: ParamDef; spec: Spec; onSpec: (s: Spe
           <>
             <label class="span2">
               고를 수 있는 값 (쉼표로 구분)
-              <input value={(d.options ?? []).join(', ')} onChange={(e) => set({ options: e.currentTarget.value.split(',').map((s) => s.trim()).filter(Boolean) })} />
+              <ListInput value={d.options} onChange={(options) => set({ options })} />
             </label>
             <label>
               기본
@@ -111,7 +119,7 @@ function ParamCard(p: { name: string; def: ParamDef; spec: Spec; onSpec: (s: Spe
       </div>
       <label>
         다른 이름 (쉼표로 구분, 챗봇이 이렇게 써도 알아들어요)
-        <input value={(d.alias ?? []).join(', ')} onChange={(e) => set({ alias: e.currentTarget.value.split(',').map((s) => s.trim()).filter(Boolean) })} />
+        <ListInput value={d.alias} onChange={(alias) => set({ alias })} />
       </label>
     </div>
   );
