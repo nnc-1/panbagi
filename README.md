@@ -10,12 +10,43 @@ https://내주소/채팅/템플릿.webp?name=도키&hp=72
 템플릿은 브라우저 관리 화면에서 만들고 고쳐요. 요소를 SVG로 겹친 뒤 resvg(WASM)로 평면화해 R2에 잠깐 저장하고, 같은 값이면 저장본을 다시 써요.
 한 설치는 한 사람의 것이고, 각자 자기 Cloudflare 계정(무료 플랜 가능)에 설치해요.
 
-## 설치
+## 설치 (5분, 코드 몰라도 돼요)
+
+**준비물**: Cloudflare 계정(무료), GitHub 계정. 둘 다 없으면 먼저 만들어 두세요.
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/nnc-1/panbagi)
 
-- **버튼**: 위 버튼을 누르면 R2, D1, 데이터베이스 표, 관리 토큰 입력까지 웹에서 끝나요. 설치 뒤 관리 화면에서 "한글 폰트와 샘플 넣기"를 한 번 눌러요.
-- **Windows**: 코드를 받아 `설치.bat`을 더블클릭해요. 내 도메인 연결과 업데이트까지 해 줘요.
+1. 위 **Deploy to Cloudflare** 버튼을 누르고 Cloudflare에 로그인해요.
+2. **애플리케이션 설정** 화면에서
+   - **Git 계정**: "새로운 GitHub 연결"을 눌러 내 GitHub를 연결해요. 이 코드의 사본이 내 GitHub에 새 저장소로 만들어져요.
+   - **개인 Git 리포지토리 생성**: 체크하면 사본이 비공개가 돼요(추천).
+   - **프로젝트 이름**: 그대로 `panbagi`로 둬도 돼요. 주소에 들어가는 이름이에요.
+   - **D1 데이터베이스**, **R2 버킷**: "신규 생성" 그대로 둬요.
+   - **ADMIN_TOKEN**: 관리 화면 비밀번호예요. **16자 이상**으로 남이 짐작하기 어렵게 넣어요.
+   - 빌드·배포 명령 칸은 손대지 않아요.
+3. **배포**를 누르고 1~3분 기다려요. 끝나면 `https://panbagi.○○○.workers.dev` 같은 주소가 나와요.
+4. 그 주소 뒤에 `/admin`을 붙여 열고, ADMIN_TOKEN으로 들어가요.
+5. 처음 한 번 **"한글 폰트와 샘플 넣기"** 를 눌러요. 한글 폰트와 샘플 템플릿이 들어가요.
+
+### 꼭 적어 둘 것
+
+| 무엇 | 어디서 보나 | 왜 필요한가 |
+|---|---|---|
+| **ADMIN_TOKEN** (관리 토큰) | 2단계에서 직접 넣은 값. **다시 볼 수 없어요** | 관리 화면에 들어갈 때 |
+| **내 주소** | 3단계 끝에 나온 주소 (내 도메인을 붙였다면 그 주소) | 이미지 주소와 관리 화면 주소의 앞부분 |
+| **관리 화면 주소** | `내 주소/admin` (주소를 바꿨다면 바꾼 주소) | 템플릿을 만들고 고칠 때 |
+| **내 사본 저장소** | GitHub의 내 저장소 목록 (2단계에서 만들어진 것) | 업데이트하거나 설정을 바꿀 때 |
+
+ADMIN_TOKEN을 잊어버렸으면 Cloudflare 대시보드 **Workers & Pages → (내 Worker) → Settings → Variables and Secrets**에서 ADMIN_TOKEN을 새 값으로 바꾸면 돼요.
+
+### 내 도메인으로 쓰기 (선택)
+
+대시보드 **Workers & Pages → (내 Worker) → Settings → Domains & Routes → Add → Custom Domain**에 `img.내도메인.com`처럼 넣어요.
+도메인이 같은 Cloudflare 계정에 있어야 하고, 인증서가 만들어지는 몇 분 뒤부터 열려요.
+
+### GitHub이 없거나 Windows에서 설치하고 싶다면
+
+코드를 **Code → Download ZIP**으로 받아 풀고 `설치.bat`을 더블클릭해요. 질문에 답하면 내 도메인 연결까지 해 주고, 나중에 같은 파일로 업데이트도 돼요.
 
 자세한 안내: [docs/설치.md](docs/설치.md) · 관리 화면 쓰는 법: [docs/관리-화면.md](docs/관리-화면.md) · 무료 플랜 CPU 재기: [docs/배포와-측정.md](docs/배포와-측정.md)
 
