@@ -1,18 +1,21 @@
 import type { ParamDef, Spec } from './spec';
+import { LIMITS } from './spec';
 
 export type Values = Record<string, string | number | boolean>;
 
 const NONE = new Set(['', 'none', 'null']);
 const TRUE = new Set(['1', 'true', 'on', 'yes', '예', 'y']);
 
+// line breaks survive (a text box shows them, a one-line text turns them into spaces)
 function stripControl(s: string): string {
-  return s.replace(/[\u0000-\u001f\u007f]/g, '');
+  return s.replace(/\r\n?/g, '\n').replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, '');
 }
 
 function normalizeOne(def: ParamDef, raw: string | undefined): string | number | boolean {
   switch (def.type) {
     case 'text': {
-      const max = def.maxLength ?? 40;
+      // long text is fine (a text box, a board); the hard cap keeps one render's work bounded
+      const max = Math.min(def.maxLength ?? LIMITS.textLength, LIMITS.maxTextLength);
       if (raw === undefined) return stripControl(def.default ?? '').slice(0, max);
       const s = stripControl(raw).trim();
       return NONE.has(s.toLowerCase()) ? '' : [...s].slice(0, max).join('');

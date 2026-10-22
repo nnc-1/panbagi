@@ -144,6 +144,37 @@ export function estimateEm(s: string): number {
   return w;
 }
 
+/**
+ * Break text into lines no wider than `maxW` (in px at `size`). Enter and a typed `\n` always break; otherwise lines
+ * break at spaces, and a word longer than a whole line is cut between letters. `em` measures a string in em.
+ */
+export function wrapLines(text: string, maxW: number, size: number, letterSpacing: number, em: (s: string) => number): string[] {
+  const width = (s: string) => em(s) * size + letterSpacing * Math.max(0, [...s].length - 1);
+  const out: string[] = [];
+  for (const para of text.replace(/\\n/g, '\n').split('\n')) {
+    if (!(maxW > 0)) {
+      out.push(para);
+      continue;
+    }
+    let line = '';
+    for (const word of para.split(/(?<= )/)) {
+      // a word keeps its trailing space; it is trimmed off the end of a finished line
+      if (line && width((line + word).trimEnd()) > maxW) (out.push(line.trimEnd()), (line = ''));
+      if (line || width(word.trimEnd()) <= maxW) {
+        line += word;
+        continue;
+      }
+      // the word alone is wider than a line: cut it between letters
+      for (const ch of word) {
+        if (line && ch !== ' ' && width(line + ch) > maxW) (out.push(line), (line = ''));
+        line += ch;
+      }
+    }
+    out.push(line.trimEnd());
+  }
+  return out;
+}
+
 export interface ComposeOptions {
   /** Replace the data: URI of a raster asset (the admin UI passes blob: URLs so previews stay fast). */
   imageHref?: (alias: string, asset: AssetData) => string | undefined;
@@ -181,6 +212,58 @@ export function composeSvg(spec: Spec, values: Values, assets: Map<string, Asset
   const ratioOf = (v: unknown, vars: Vars): number => {
     const r = typeof v === 'string' && v in vars ? Number(vars[v]) : Number(v);
     return Number.isFinite(r) ? r : 0;
+  };
+
+  /** A text box: lines wrapped inside w, stacked from the top (or middle / bottom) of h; `fit` covers the whole box. */
+  const textBox = (e: any, x: number, y: number, vars: Vars): string => {
+    const text = interpolate(String(e.text ?? ''), vars);
+    if (!text.trim()) return '';
+    const family = String(e.font ?? '');
+    const weight = num(e.weight, 400);
+    const em = (s: string) => opts.measure?.(s, family, weight) ?? estimateEm(s);
+    const w = num(e.w), boxH = num(e.h);
+    const lh = num(e.lineHeight, 1.3) > 0 ? num(e.lineHeight, 1.3) : 1.3;
+    const ls = num(e.letterSpacing);
+    const fit = e.fit === 'shrink' || e.fit === 'clip' ? e.fit : undefined;
+    let size = num(e.size, 16);
+    if (size <= 0) return '';
+    const fits = (s: number, lines: string[]) =>
+      (!(boxH > 0) || lines.length * s * lh <= boxH + 0.5) &&
+      (!(w > 0) || lines.every((l) => em(l) * s + ls * Math.max(0, [...l].length - 1) <= w + 0.5));
+    let lines = wrapLines(text, w, size, ls, em);
+    let overflow = !fits(size, lines);
+    if (fit === 'shrink' && overflow) {
+      // the largest size (2 decimals, not below minSize) whose lines fit the box
+      const min = Math.min(size, Math.max(1, num(e.minSize, 1)));
+      let lo = min, hi = size;
+      for (let i = 0; i < 14 && hi - lo > 0.01; i++) {
+        const mid = (lo + hi) / 2;
+        if (fits(mid, wrapLines(text, w, mid, ls, em))) lo = mid;
+        else hi = mid;
+      }
+      size = Math.floor(lo * 100) / 100;
+      lines = wrapLines(text, w, size, ls, em);
+      overflow = !fits(size, lines);
+    }
+    while (lines.length > 1 && lines[lines.length - 1] === '') lines.pop();
+    const lineH = size * lh;
+    const h = boxH > 0 ? boxH : lines.length * lineH;
+    const top = e.valign === 'middle' ? y + (h - lines.length * lineH) / 2 : e.valign === 'bottom' ? y + h - lines.length * lineH : y;
+    fonts.set(`${family}|${weight}`, { family, weight });
+    const align = e.align === 'center' ? 'middle' : e.align === 'right' ? 'end' : 'start';
+    const tx = e.align === 'center' ? x + w / 2 : e.align === 'right' ? x + w : x;
+    const spans = lines
+      .map((l, i) => (l ? `<tspan x="${fmt(tx)}" y="${fmt(top + i * lineH + lineH / 2 + size * 0.35)}">${esc(l)}</tspan>` : ''))
+      .join('');
+    const lsA = ls ? ` letter-spacing="${fmt(ls)}"` : '';
+    const ff = family ? ` font-family="${esc(family)}"` : '';
+    let el = `<text font-size="${fmt(size)}" font-weight="${weight}" text-anchor="${align}" fill="${safeColor(e.fill, '#fff')}"${ff}${lsA}>${spans}</text>`;
+    if (fit && overflow && w > 0 && boxH > 0) {
+      const id = `c${uid++}`;
+      defs.push(`<clipPath id="${id}"><rect x="${fmt(x)}" y="${fmt(y)}" width="${fmt(w)}" height="${fmt(h)}"/></clipPath>`);
+      el = `<g clip-path="url(#${id})">${el}</g>`;
+    }
+    return wrapT(e, x, y, w, h, el);
   };
 
   const renderEl = (raw: El, vars: Vars, depth: number): string => {
@@ -227,6 +310,7 @@ export function composeSvg(spec: Spec, values: Values, assets: Map<string, Asset
         return wrapT(e, x, y, w, h, el);
       }
       case 'text': {
+        if (e.wrap) return textBox(e, x, y, vars);
         const text = interpolate(String(e.text ?? ''), vars).replace(/[\r\n]+/g, ' ');
         if (!text) return '';
         const family = String(e.font ?? '');

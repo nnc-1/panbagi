@@ -21,6 +21,16 @@ describe('sample template', () => {
 });
 
 describe('normalizeParams', () => {
+  it('takes 500 letters by default and never more than 2000', () => {
+    const spec = { canvas: { w: 10, h: 10 }, params: { a: { type: 'text' }, b: { type: 'text', maxLength: 99999 } }, elements: [] } as any;
+    const v = normalizeParams(spec, { a: '가'.repeat(600), b: 'x'.repeat(3000) }).values;
+    expect([...String(v.a)].length).toBe(500);
+    expect(String(v.b).length).toBe(2000);
+  });
+  it('keeps line breaks in text values (a text box shows them)', () => {
+    const spec = { canvas: { w: 10, h: 10 }, params: { t: { type: 'text' } }, elements: [] } as any;
+    expect(normalizeParams(spec, q('t=a%0D%0Ab%09c')).values.t).toBe('a\nbc');
+  });
   it('fills defaults, drops unknown keys, clamps and snaps', () => {
     const { values } = normalizeParams(hud, q('hp=150&level=abc&zzz=1&p1=마법사&p2=bogus&name=%20%20x%00y '));
     expect(values.hp).toBe(100);

@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import type { Cond, ParamDef } from '../../src/spec';
 
-export type Kind = 'number' | 'text' | 'color' | 'paint' | 'select';
+export type Kind = 'number' | 'text' | 'multiline' | 'color' | 'paint' | 'select';
 type Params = Record<string, ParamDef>;
 
 const isObj = (v: unknown): v is Record<string, any> => !!v && typeof v === 'object' && !Array.isArray(v);
@@ -91,6 +91,8 @@ function BaseInput(p: { kind: Kind; value: unknown; onChange: (v: any) => void; 
           ))}
         </select>
       );
+    case 'multiline':
+      return <textarea rows={4} value={p.value === undefined ? '' : String(p.value)} placeholder={p.placeholder} onInput={(e) => p.onChange(e.currentTarget.value)} />;
     default:
       return <input value={p.value === undefined ? '' : String(p.value)} placeholder={p.placeholder} onInput={(e) => p.onChange(e.currentTarget.value)} />;
   }

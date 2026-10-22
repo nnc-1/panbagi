@@ -61,6 +61,12 @@ export interface TextEl extends Base {
   /** what to do when the text is wider than w: shrink the size (down to minSize, then clip), or clip it */
   fit?: 'shrink' | 'clip';
   minSize?: number;
+  /** text box: break lines inside w (at spaces, or anywhere in a word too long for a line), plus Enter / `\n` breaks; `fit` then works on the whole box (w and h) */
+  wrap?: boolean;
+  /** line height as a multiple of the size (default 1.3) */
+  lineHeight?: number;
+  /** where the lines sit inside h (default top) */
+  valign?: 'top' | 'middle' | 'bottom';
 }
 export interface BarEl extends Base {
   type: 'bar';
@@ -108,7 +114,7 @@ export function renameAssetRefs(specJson: string, from: string, to: string): str
   return hit ? JSON.stringify(spec) : null;
 }
 
-export const LIMITS = { maxElements: 600, maxDepth: 6, maxRepeat: 64, maxCanvas: 4096 };
+export const LIMITS = { maxElements: 600, maxDepth: 6, maxRepeat: 64, maxCanvas: 4096, textLength: 500, maxTextLength: 2000 };
 
 const KINDS = new Set(['shape', 'image', 'text', 'bar', 'group', 'repeat']);
 const NAME = /^[A-Za-z_][A-Za-z0-9_]{0,31}$/;

@@ -84,13 +84,27 @@ export function Props(p: {
       {e.type === 'text' && (
         <>
           <h4>글자</h4>
+          <label class="check" title="너비(w)·높이(h) 박스 안에서 줄을 바꿔요">
+            <input
+              type="checkbox"
+              checked={!!e.wrap}
+              onChange={(ev) =>
+                p.onChange(
+                  ev.currentTarget.checked
+                    ? { wrap: true, maxWidth: undefined, w: typeof e.w === 'number' ? e.w : 200, h: typeof e.h === 'number' ? e.h : 80 }
+                    : { wrap: undefined, lineHeight: undefined, valign: undefined },
+                )
+              }
+            />
+            여러 줄 글상자 (박스 안에서 줄바꿈)
+          </label>
           <BindField
             label="내용"
             value={e.text}
             onChange={set('text')}
-            kind="text"
+            kind={e.wrap ? 'multiline' : 'text'}
             params={params}
-            hint="{이름}으로 값 넣기"
+            hint={e.wrap ? '{이름}으로 값 넣기, Enter나 \\n으로 줄바꿈' : '{이름}으로 값 넣기'}
           />
           <div class="chips">
             {Object.keys(params).map((k) => (
@@ -147,14 +161,31 @@ export function Props(p: {
               <span class="lbl">자간</span>
               <NumInput value={e.letterSpacing} onChange={set('letterSpacing')} placeholder="0" />
             </div>
-            <div class="field">
-              <span class="lbl">최대 너비</span>
-              <NumInput value={e.maxWidth} onChange={set('maxWidth')} placeholder="제한 없음" />
-            </div>
+            {e.wrap ? (
+              <>
+                <div class="field">
+                  <span class="lbl">줄 간격 (글자 크기의 배수)</span>
+                  <NumInput value={e.lineHeight} onChange={set('lineHeight')} placeholder="1.3" step={0.1} min={0.5} max={4} />
+                </div>
+                <div class="field">
+                  <span class="lbl">세로 정렬</span>
+                  <select value={e.valign ?? 'top'} onChange={(ev) => p.onChange({ valign: ev.currentTarget.value === 'top' ? undefined : ev.currentTarget.value })}>
+                    <option value="top">위</option>
+                    <option value="middle">가운데</option>
+                    <option value="bottom">아래</option>
+                  </select>
+                </div>
+              </>
+            ) : (
+              <div class="field">
+                <span class="lbl">최대 너비</span>
+                <NumInput value={e.maxWidth} onChange={set('maxWidth')} placeholder="제한 없음" />
+              </div>
+            )}
           </div>
           <div class="grid2">
             <div class="field">
-              <span class="lbl">글자가 너비(w)를 넘칠 때</span>
+              <span class="lbl">{e.wrap ? '글자가 박스를 넘칠 때' : '글자가 너비(w)를 넘칠 때'}</span>
               <select value={e.fit ?? ''} onChange={(ev) => p.onChange({ fit: ev.currentTarget.value || undefined, minSize: ev.currentTarget.value === 'shrink' ? e.minSize : undefined })}>
                 <option value="">그대로 두기</option>
                 <option value="shrink">글자 줄이기</option>
@@ -168,15 +199,27 @@ export function Props(p: {
               </div>
             )}
           </div>
-          {e.fit && typeof e.w !== 'number' && !(e.maxWidth > 0) && <p class="warn">위치와 크기의 너비(w)를 정해야 동작해요.</p>}
+          {e.wrap && typeof e.w !== 'number' && <p class="warn">위치와 크기의 너비(w)를 정해야 줄이 바뀌어요.</p>}
+          {!e.wrap && e.fit && typeof e.w !== 'number' && !(e.maxWidth > 0) && <p class="warn">위치와 크기의 너비(w)를 정해야 동작해요.</p>}
+          {e.wrap ? (
+            <p class="hint">
+              {e.fit === 'shrink'
+                ? '줄이 높이(h) 안에 다 들어갈 때까지 글자를 줄여요. 가장 작은 크기까지 줄여도 넘치면 나머지는 숨겨요.'
+                : e.fit === 'clip'
+                  ? '글자 크기는 그대로 두고, 박스 밖으로 나간 줄은 안 보이게 해요.'
+                  : '줄이 많으면 높이(h) 아래로 그대로 이어져요.'}{' '}
+              줄은 띄어쓰기에서 바뀌고, 한 줄보다 긴 낱말만 글자 사이에서 끊어요. 높이(h)를 비우면 줄 수만큼 자라요.
+            </p>
+          ) : (
           <p class="hint">
             {e.fit === 'shrink'
               ? '실제 폰트의 글자 폭을 재서 너비(w)에 딱 맞게 글자를 줄여요. 가장 작은 크기까지 줄여도 넘치면 나머지는 숨겨요.'
               : e.fit === 'clip'
                 ? '글자 크기는 그대로 두고, 너비(w) 밖으로 나간 부분만 안 보이게 해요.'
                 : '글자가 길면 너비(w) 밖으로 그대로 삐져나가요. 위의 "최대 너비"를 적으면 글자 수로 어림잡아 줄여요(정확하지 않아요).'}{' '}
-            줄바꿈은 안 돼요.
+            여러 줄은 위의 "여러 줄 글상자"를 켜세요.
           </p>
+          )}
           {B('fill', '글자 색', 'color', { placeholder: '#ffffff' })}
         </>
       )}
