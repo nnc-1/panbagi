@@ -42,6 +42,10 @@ https://내주소/채팅/템플릿.webp?name=도키&hp=72
    `"workers_dev": true` 를 `"workers_dev": false` 로 바꾸고 **Commit changes**를 눌러요.
    1~2분 뒤 🟠 Cloudflare가 자동으로 다시 배포하면서 임시 주소(`workers.dev`)가 꺼져요. 이미지 주소에 계정 이름이 드러나지 않게 하는 단계예요.
    (4단계 주소가 열리는 걸 확인한 다음에 해요. 🟠 Cloudflare 화면에서만 끄면 다음 배포 때 다시 켜져요.)
+   **다시 배포됐는지 보는 법**
+   - ⚫ **GitHub**: 내 사본 저장소 첫 화면에서 방금 커밋 옆 표시를 봐요. 🟡 노란 점은 배포 중, ✅ 초록 체크는 끝, ❌ 빨간 X는 실패예요(눌러서 **Details**로 이유를 볼 수 있어요).
+   - 🟠 **Cloudflare**: **Workers 및 Pages → panbagi → 배포(Deployments)** 맨 위에 방금 커밋 메시지가 보이면 끝이에요.
+   - 마지막으로 브라우저에서 임시 주소 `https://panbagi.○○○.workers.dev`를 열어 봐요. 안 열리면(오류 화면) 잘 꺼진 거예요.
 6. 🟢 **관리 화면**: 브라우저 주소창에 `https://svg.내도메인.com/admin`을 넣어 열고, ADMIN_TOKEN으로 들어가요.
 7. 🟢 **관리 화면**: 처음 한 번 **"한글 폰트와 샘플 넣기"** 를 눌러요. 한글 폰트와 샘플 템플릿이 들어가요.
 
