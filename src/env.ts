@@ -10,6 +10,7 @@ export interface Env {
   RENDER_SCALE?: string;
   ENABLE_JPG?: string;
   RATE_LIMITER?: { limit(o: { key: string }): Promise<{ success: boolean }> };
+  AUTH_LIMITER?: { limit(o: { key: string }): Promise<{ success: boolean }> };
 }
 
 export interface Config {

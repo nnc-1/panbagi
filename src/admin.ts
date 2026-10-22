@@ -27,7 +27,7 @@ admin.use('*', async (c, next) => {
   if (!safeEqual(given, token)) {
     // Guessing is slowed down per visitor: after 30 wrong tokens a minute, wait.
     const ip = c.req.header('cf-connecting-ip') ?? 'anon';
-    if (c.env.RATE_LIMITER && !(await c.env.RATE_LIMITER.limit({ key: `auth:${ip}` })).success)
+    if (c.env.AUTH_LIMITER && !(await c.env.AUTH_LIMITER.limit({ key: `auth:${ip}` })).success)
       return c.json({ error: 'too many attempts' }, 429, { 'Retry-After': '60' });
     return c.json({ error: 'unauthorized' }, 401);
   }
