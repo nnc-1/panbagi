@@ -77,6 +77,7 @@ export function composeForPreview(
   return composeSvg(spec, v, assets.map, { imageHref: (_a, data) => assets.urls.get(data), measure: makeMeasure(faces, defaultFamily, estimateEm) }).svg;
 }
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
 const DROP = new Set(['script', 'foreignobject', 'iframe', 'animate', 'set', 'animatemotion', 'animatetransform', 'a', 'handler', 'listener']);
 
 /**
@@ -89,17 +90,18 @@ export function toSafeNode(svg: string, fontFallback: string | undefined, knownF
   if (root.nodeName !== 'svg' || doc.querySelector('parsererror')) return null;
   const walk = (el: Element) => {
     for (const c of [...el.children]) {
-      if (DROP.has(c.localName.toLowerCase())) {
+      // only SVG elements: an HTML one slipped in (meta refresh, iframe, embed...) could act even outside foreignObject
+      if (c.namespaceURI !== SVG_NS || DROP.has(c.localName.toLowerCase())) {
         c.remove();
         continue;
       }
       walk(c);
     }
     for (const at of [...el.attributes]) {
-      const name = at.name.toLowerCase();
+      const name = at.localName.toLowerCase(); // without the prefix: xlink:href under any prefix (xl:href) is still an href
       const v = at.value.trim();
       if (name.startsWith('on')) el.removeAttribute(at.name);
-      else if ((name === 'href' || name === 'xlink:href') && !(v.startsWith('#') || v.startsWith('blob:') || /^data:image\/(png|jpe?g|webp|gif);/i.test(v))) el.removeAttribute(at.name);
+      else if (name === 'href' && !(v.startsWith('#') || v.startsWith('blob:') || /^data:image\/(png|jpe?g|webp|gif);/i.test(v))) el.removeAttribute(at.name);
       else if (name === 'style' && /url\(\s*['"]?(?!#)|@import|expression/i.test(v)) el.removeAttribute(at.name);
       else if (name === 'font-family' && fontFallback && !knownFamilies.has(v)) el.setAttribute('font-family', `"${v}", "${fontFallback}"`);
     }

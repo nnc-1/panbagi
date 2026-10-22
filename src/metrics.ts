@@ -83,9 +83,13 @@ function parse(b: Uint8Array): Metrics | null {
   };
   return {
     advance(cp) {
-      const g = glyph(cp);
-      if (!g) return undefined;
-      return dv.getUint16(hmtx + Math.min(g, numH - 1) * 4) / upm;
+      try {
+        const g = glyph(cp);
+        if (!g) return undefined;
+        return dv.getUint16(hmtx + Math.min(g, numH - 1) * 4) / upm;
+      } catch {
+        return undefined; // a broken table points outside the file: fall back like a missing glyph instead of failing the render
+      }
     },
   };
 }

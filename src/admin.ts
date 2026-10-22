@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import resvgWasm from '@resvg/resvg-wasm/index_bg.wasm';
 import webpWasm from '@jsquash/webp/codec/enc/webp_enc_simd.wasm';
-import { readConfig, type Env } from './env';
+import { clientKey, readConfig, type Env } from './env';
 import { initRaster, initWebpEncoder } from './raster';
 import { renderImage } from './render';
 import { sanitizeSvg } from './sanitize';
@@ -19,16 +19,43 @@ function safeEqual(a: string, b: string): boolean {
   return d === 0;
 }
 
+// Once an address is over the limit it is refused even with the right token; otherwise the limit would only
+// change the error code and guessing could go on. The rate limiter cannot be asked without counting, so the lock
+// is kept in this isolate and in this location's cache (the limiter itself also counts per location).
+const LOCK_MS = 60_000;
+const locks = new Map<string, number>(); // key -> locked until (ms)
+const lockReq = (k: string) => new Request(`https://auth-lock.invalid/${encodeURIComponent(k)}`);
+const edgeCache = () => (globalThis as any).caches?.default as Cache | undefined;
+
+async function isLocked(k: string): Promise<boolean> {
+  const until = locks.get(k);
+  if (until !== undefined) {
+    if (until > Date.now()) return true;
+    locks.delete(k);
+  }
+  return !!(await edgeCache()?.match(lockReq(k)).catch(() => undefined));
+}
+
+async function lock(k: string) {
+  if (locks.size >= 1000) locks.delete(locks.keys().next().value!);
+  locks.set(k, Date.now() + LOCK_MS);
+  await edgeCache()?.put(lockReq(k), new Response('locked', { headers: { 'Cache-Control': `max-age=${LOCK_MS / 1000}` } })).catch(() => {});
+}
+
 admin.use('*', async (c, next) => {
   const token = c.env.ADMIN_TOKEN;
   if (!token) return c.json({ error: 'ADMIN_TOKEN is not configured' }, 503);
   if (token.length < 16) return c.json({ error: 'ADMIN_TOKEN must be at least 16 characters' }, 503);
   const given = c.req.header('x-admin-token') ?? c.req.header('authorization')?.replace(/^Bearer\s+/i, '') ?? '';
+  // Guessing is slowed down per visitor: after 30 wrong tokens a minute, every token (even the right one) waits a minute.
+  const key = `auth:${clientKey(c.req.header('cf-connecting-ip'))}`;
+  const tooMany = () => c.json({ error: 'too many attempts' }, 429, { 'Retry-After': '60', 'Cache-Control': 'no-store' });
+  if (c.env.AUTH_LIMITER && (await isLocked(key))) return tooMany();
   if (!safeEqual(given, token)) {
-    // Guessing is slowed down per visitor: after 30 wrong tokens a minute, wait.
-    const ip = c.req.header('cf-connecting-ip') ?? 'anon';
-    if (c.env.AUTH_LIMITER && !(await c.env.AUTH_LIMITER.limit({ key: `auth:${ip}` })).success)
-      return c.json({ error: 'too many attempts' }, 429, { 'Retry-After': '60' });
+    if (c.env.AUTH_LIMITER && !(await c.env.AUTH_LIMITER.limit({ key })).success) {
+      await lock(key);
+      return tooMany();
+    }
     return c.json({ error: 'unauthorized' }, 401);
   }
   await next();
