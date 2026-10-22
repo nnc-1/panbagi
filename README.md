@@ -36,7 +36,7 @@ https://내주소/채팅/템플릿.webp?name=도키&hp=72
    - **ADMIN_TOKEN**: 관리 화면 비밀번호예요. **16자 이상**으로 남이 짐작하기 어렵게 넣고, 따로 적어 둬요.
    - 빌드·배포 명령 칸은 손대지 않아요.
 3. 🟠 **Cloudflare**: **배포**를 누르고 1~3분 기다려요. 끝나면 `https://panbagi.○○○.workers.dev` 같은 임시 주소가 나와요(`○○○`는 내 계정 이름).
-4. 🟠 **Cloudflare** <https://dash.cloudflare.com> → 왼쪽 메뉴 **빌드 → 컴퓨트 → Workers 및 Pages**(영어 화면은 Compute → Workers & Pages)를 눌러요. 목록에서 **panbagi** → **설정(Settings) → 도메인 및 경로(Domains & Routes) → 추가(Add) → 사용자 지정 도메인(Custom Domain)**에 `svg.내도메인.com`처럼 넣어요.
+4. 🟠 **Cloudflare** <https://dash.cloudflare.com> → 왼쪽 메뉴 **빌드 → 컴퓨트 → Workers 및 Pages**(영어 화면은 Compute → Workers & Pages)를 눌러요. 목록에서 **panbagi** → **설정(Settings)** → **맞춤 도메인 및 라우팅(Domains & Routes)** 칸의 파란 **+ 도메인 추가(Add domain)** 를 눌러요. 주소에 `svg.내도메인.com`처럼 넣고, **유형은 프로덕션(Production)** 을 골라요(미리보기는 시험용이라 고르지 않아요).
    DNS 기록과 인증서는 Cloudflare가 자동으로 만들어요. 도메인은 같은 Cloudflare 계정에 있어야 하고, 몇 분 뒤부터 열려요.
 5. ⚫ **GitHub** <https://github.com> → 오른쪽 위 내 프로필 → **Your repositories** → 2단계에서 만들어진 **내 사본 저장소** → `wrangler.jsonc` 파일 → 연필(✏️ Edit) 버튼.
    `"workers_dev": true` 를 `"workers_dev": false` 로 바꾸고 **Commit changes**를 눌러요.
