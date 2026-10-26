@@ -99,6 +99,8 @@ export interface Spec {
   canvas: { w: number; h: number; scale?: number; background?: string };
   params: Record<string, ParamDef>;
   assets?: Record<string, string>; // alias -> asset name
+  /** font families loaded in the editor's 에셋 tab (text elements pick from these); the engine reads each text's own `font` */
+  fonts?: string[];
   elements: El[];
 }
 
@@ -141,6 +143,7 @@ export function validateSpec(spec: any): string[] {
       }
     }
   }
+  if (spec.fonts !== undefined && (!Array.isArray(spec.fonts) || spec.fonts.some((f: unknown) => typeof f !== 'string'))) errs.push('fonts must be a list of names');
   let count = 0;
   const walk = (els: any, depth: number) => {
     if (!Array.isArray(els)) return errs.push('elements/children must be an array');

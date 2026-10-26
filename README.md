@@ -171,7 +171,7 @@ WebP 무손실은 디코드했을 때 PNG와 픽셀이 완전히 같아서(직�
 
 ## 템플릿 규칙 (spec)
 
-`samples/hud.json`(무거운 예시: 프로필·게이지·파티 반복·의뢰, `scripts/build-hud.mjs`로 생성)과 `samples/lite.json`(가벼운 예시)이 있습니다. 구성은 `canvas`, `params`, `assets`(별칭 → 에셋 이름), `elements`.
+`samples/hud.json`(무거운 예시: 프로필·게이지·파티 반복·의뢰, `scripts/build-hud.mjs`로 생성)과 `samples/lite.json`(가벼운 예시)이 있습니다. 구성은 `canvas`, `params`, `assets`(별칭 → 에셋 이름), 선택 `fonts`(편집기 에셋 탭에 불러온 폰트 이름 목록, 엔진은 무시), `elements`.
 
 | 요소 | 설명 |
 |---|---|

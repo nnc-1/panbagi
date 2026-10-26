@@ -158,3 +158,4 @@ header.top nav a { white-space: nowrap; }
 .asset-use .used, .font-use .used { color: var(--muted, #888); } .asset-use .used.none { color: #b07400; }
 .font-use { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: center; padding: 6px 0; font-size: 13px; }
 .font-use small { display: block; } .warn-text { color: #c0392b; }
+.font-use > .row select { flex: 1; min-width: 0; } .font-use .used.none { color: #b07400; }

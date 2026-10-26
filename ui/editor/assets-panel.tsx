@@ -1,8 +1,9 @@
-// "에셋" tab: the pictures (by alias) and fonts this template uses, managed in one place.
+// "에셋" tab: the pictures (by alias) and fonts loaded into this template; image and text elements pick only from these.
 import type { El, Spec } from '../../src/spec';
 import type { Asset, Font } from '../api';
 import { AssetOptions } from '../folders';
 import { Thumb } from '../pages/assets';
+import { loadedFonts } from '../model';
 import { FontSelect } from './props';
 
 /** every asset alias an image element can draw: a fixed value, each case or stop, and the default */
@@ -56,8 +57,18 @@ export function AssetsPanel(p: {
     if (e.type === 'text') fontUse.set(e.font ?? '', (fontUse.get(e.font ?? '') ?? 0) + 1);
   });
   const families = new Set(p.fonts.map((f) => f.family));
-  const swapFont = (from: string, to: string) =>
-    p.onSpec({ ...p.spec, elements: mapEls(p.spec.elements, (e) => (e.type === 'text' && (e.font ?? '') === from ? { ...e, font: to || undefined } : e)) });
+  const loaded = loadedFonts(p.spec);
+  /** text elements on `from` move to `to` ('' = the default font), and the list follows */
+  const swapFont = (from: string, to: string) => {
+    const fonts = loaded.flatMap((f) => (f === from ? (to && !loaded.includes(to) ? [to] : []) : [f]));
+    const s: Spec = { ...p.spec, fonts, elements: mapEls(p.spec.elements, (e) => (e.type === 'text' && e.font === from ? { ...e, font: to || undefined } : e)) };
+    if (!fonts.length) delete s.fonts;
+    p.onSpec(s);
+  };
+  const removeFont = (f: string) => {
+    const used = fontUse.get(f) ?? 0;
+    if (!used || confirm(`글자 ${used}개가 "${f}"를 써요. 빼면 기본 폰트로 그려요. 뺄까요?`)) swapFont(f, '');
+  };
   const unused = aliases.filter(([a]) => !imgUse.get(a));
 
   return (
@@ -107,18 +118,53 @@ export function AssetsPanel(p: {
       </div>
 
       <h4>폰트</h4>
-      <p class="hint">글자 요소가 쓰는 폰트예요. 오른쪽에서 다른 폰트를 고르면 그 폰트를 쓰던 글자가 모두 바뀌어요. 폰트 파일은 폰트 메뉴에서 올려요.</p>
-      {[...fontUse.entries()].map(([f, count]) => (
-        <div class="font-use" key={f || '-'}>
-          <span>
-            <b>{f || `기본 폰트${p.defaultFamily ? ` (${p.defaultFamily})` : ''}`}</b>
-            {f && !families.has(f) && <small class="warn-text"> 없음 → 기본으로 그려요</small>}
-            <small class="used"> 글자 {count}개</small>
-          </span>
-          <FontSelect value={f} onChange={(to) => to !== f && swapFont(f, to)} fonts={p.fonts} settings={p.settings} />
-        </div>
-      ))}
-      {!fontUse.size && <p class="empty small">글자 요소가 없어요.</p>}
+      <p class="hint">
+        글자 요소는 여기에 불러온 폰트 중에서 골라요. 폰트 메뉴의 폰트를 아래 <b>+ 폰트 불러오기</b>로 먼저 불러와요. 오른쪽에서 다른 폰트로 바꾸면(교체) 그 폰트를 쓰던
+        글자가 모두 바뀌어요. 기본 폰트는 불러오지 않아도 늘 쓸 수 있어요.
+      </p>
+      <div class="font-use">
+        <span>
+          <b>기본 폰트{p.defaultFamily ? ` (${p.defaultFamily})` : ''}</b>
+          <small class="used"> {fontUse.get('') ? `글자 ${fontUse.get('')}개가 써요` : '쓰는 글자 없음'}</small>
+        </span>
+        <small class="used">폰트 메뉴에서 정해요</small>
+      </div>
+      {loaded.map((f) => {
+        const used = fontUse.get(f) ?? 0;
+        return (
+          <div class="font-use" key={f}>
+            <span>
+              <b>{f}</b>
+              {!families.has(f) && <small class="warn-text"> 폰트 메뉴에 없음 → 기본으로 그려요</small>}
+              <small class={used ? 'used' : 'used none'}> {used ? `글자 ${used}개가 써요` : '쓰는 글자 없음'}</small>
+            </span>
+            <span class="row tight">
+              <FontSelect value={f} onChange={(to) => to !== f && swapFont(f, to)} fonts={p.fonts} settings={p.settings} />
+              <button class="ghost small danger" title="불러온 폰트 빼기 (폰트 메뉴의 파일은 그대로)" onClick={() => removeFont(f)}>
+                ✕
+              </button>
+            </span>
+          </div>
+        );
+      })}
+      {!loaded.length && <p class="empty small">아직 불러온 폰트가 없어요. 글자는 기본 폰트로 그려요.</p>}
+      <div class="row">
+        <select value="" onChange={(e) => e.currentTarget.value && p.onSpec({ ...p.spec, fonts: [...loaded, e.currentTarget.value] })}>
+          <option value="">+ 폰트 불러오기</option>
+          {[...families]
+            .filter((f) => !loaded.includes(f))
+            .map((f) => (
+              <option key={f} value={f}>
+                {f}
+              </option>
+            ))}
+        </select>
+        {loaded.some((f) => !fontUse.get(f)) && (
+          <button class="small" onClick={() => p.onSpec({ ...p.spec, fonts: loaded.filter((f) => fontUse.get(f)) })}>
+            안 쓰는 폰트 {loaded.filter((f) => !fontUse.get(f)).length}개 빼기
+          </button>
+        )}
+      </div>
     </div>
   );
 }
