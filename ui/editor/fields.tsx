@@ -5,6 +5,20 @@ import type { Cond, ParamDef } from '../../src/spec';
 export type Kind = 'number' | 'text' | 'multiline' | 'color' | 'paint' | 'select';
 type Params = Record<string, ParamDef>;
 
+/** a number param, or a random one that rolls numbers (usable in ranges, gauges and repeat counts) */
+export const isNumeric = (d: ParamDef | undefined) => d?.type === 'number' || (d?.type === 'random' && !d.options);
+/** values a param can take, for "+ 경우" suggestions */
+const choicesOf = (d: ParamDef | undefined): string[] => {
+  if (d?.type === 'enum') return d.options;
+  if (d?.type === 'bool') return ['true', 'false'];
+  if (d?.type === 'random') {
+    if (d.options) return d.options;
+    const lo = d.min ?? 1, hi = d.max ?? 6;
+    return hi - lo < 50 ? Array.from({ length: hi - lo + 1 }, (_, i) => String(lo + i)) : [];
+  }
+  return [];
+};
+
 const isObj = (v: unknown): v is Record<string, any> => !!v && typeof v === 'object' && !Array.isArray(v);
 export const isSwitch = (v: unknown) => isObj(v) && 'switch' in v;
 export const isSteps = (v: unknown) => isObj(v) && 'steps' in v;
@@ -83,7 +97,8 @@ function BaseInput(p: { kind: Kind; value: unknown; onChange: (v: any) => void; 
       return <PaintInput value={p.value} onChange={p.onChange} />;
     case 'select':
       return (
-        <select value={String(p.value ?? '')} onChange={(e) => p.onChange(e.currentTarget.value || undefined)}>
+        // '' stays '' (not undefined) so a "none" case is kept, not dropped
+        <select value={String(p.value ?? '')} onChange={(e) => p.onChange(e.currentTarget.value)}>
           {p.options!.map(([v, l]) => (
             <option key={v} value={v}>
               {l}
@@ -102,7 +117,7 @@ function BaseInput(p: { kind: Kind; value: unknown; onChange: (v: any) => void; 
 export function BindField(p: { label: string; value: unknown; onChange: (v: unknown) => void; kind: Kind; params: Params; options?: [string, string][]; placeholder?: string; hint?: string }) {
   const v = p.value as any;
   const names = Object.keys(p.params);
-  const numParams = names.filter((k) => p.params[k].type === 'number');
+  const numParams = names.filter((k) => isNumeric(p.params[k]));
   const head = (
     <span class="lbl">
       {p.label}
@@ -156,7 +171,7 @@ export function BindField(p: { label: string; value: unknown; onChange: (v: unkn
               </div>
             ))}
             <AddCase
-              suggestions={def?.type === 'enum' ? def.options : def?.type === 'bool' ? ['true', 'false'] : []}
+              suggestions={choicesOf(def)}
               existing={Object.keys(v.cases ?? {})}
               onAdd={(keys) => set({ cases: { ...v.cases, ...Object.fromEntries(keys.map((k) => [k, v.default])) } })}
             />
@@ -228,7 +243,7 @@ function AddCase(p: { suggestions: string[]; existing: string[]; onAdd: (keys: s
 
 /** Number, or the name of a parameter (bar value/max, repeat count). */
 export function NumOrParam(p: { label: string; value: unknown; onChange: (v: unknown) => void; params: Params; hint?: string }) {
-  const nums = Object.keys(p.params).filter((k) => p.params[k].type === 'number');
+  const nums = Object.keys(p.params).filter((k) => isNumeric(p.params[k]));
   if (isObj(p.value)) return <BindField label={p.label} value={p.value} onChange={p.onChange} kind="number" params={p.params} />;
   const isParam = typeof p.value === 'string';
   return (
@@ -311,7 +326,7 @@ function toRows(c: Cond | undefined): { mode: 'and' | 'or'; rows: Row[] } | null
 
 function fromRows(mode: 'and' | 'or', rows: Row[], params: Params): Cond | undefined {
   const conds = rows.map((r) => {
-    const numeric = params[r.param]?.type === 'number';
+    const numeric = isNumeric(params[r.param]);
     const val = (s: string) => (numeric && s.trim() !== '' && Number.isFinite(Number(s)) ? Number(s) : s.trim());
     return { param: r.param, [r.op]: r.op === 'in' ? r.value.split(',').map(val) : r.op === 'eq' || r.op === 'ne' ? val(r.value) : Number(r.value) || 0 } as Cond;
   });
@@ -356,9 +371,9 @@ export function WhenField(p: { value: Cond | undefined; onChange: (c: Cond | und
                 </option>
               ))}
             </select>
-            {d?.type === 'enum' && r.op !== 'in' ? (
+            {(d?.type === 'enum' || (d?.type === 'random' && d.options)) && r.op !== 'in' ? (
               <select value={r.value} onChange={(e) => upd({ value: e.currentTarget.value })}>
-                {d.options.map((o) => (
+                {(d.options ?? []).map((o) => (
                   <option key={o} value={o}>
                     {o}
                   </option>
@@ -384,7 +399,7 @@ export function WhenField(p: { value: Cond | undefined; onChange: (c: Cond | und
           onClick={() => {
             const k = names[0];
             const d = p.params[k];
-            set(mode, [...rows, { param: k, op: d.type === 'number' ? 'gt' : 'ne', value: d.type === 'number' ? '0' : d.type === 'bool' ? 'false' : '' }]);
+            set(mode, [...rows, { param: k, op: isNumeric(d) ? 'gt' : 'ne', value: isNumeric(d) ? '0' : d.type === 'bool' ? 'false' : '' }]);
           }}
         >
           + 조건

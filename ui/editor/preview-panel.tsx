@@ -12,6 +12,7 @@ export function imageUrl(chat: string, slug: string, spec: Spec, values: Record<
   const { values: norm } = normalizeParams(spec, values);
   const defs = normalizeParams(spec, {}).values;
   const q = Object.entries(norm)
+    .filter(([k]) => spec.params[k]?.type !== 'random') // rolled by the server, not sent
     .filter(([k, v]) => !onlyChanged || v !== defs[k])
     .map(([k, v]) => `${k}=${enc(typeof v === 'boolean' ? (v ? '1' : '0') : String(v))}`)
     .join('&');
@@ -21,7 +22,8 @@ export function imageUrl(chat: string, slug: string, spec: Spec, values: Record<
 /** Chatbot instructions generated from the parameter definitions. */
 export function promptSnippet(chat: string, slug: string, name: string, spec: Spec, values: Record<string, string>) {
   const base = `${location.origin}/${chat}/${slug}.webp`;
-  const lines = Object.entries(spec.params).map(([k, d]) => {
+  const sent = Object.entries(spec.params).filter(([, d]) => d.type !== 'random');
+  const lines = sent.map(([k, d]) => {
     const desc = d.desc ? `${d.desc}. ` : '';
     let what = '';
     if (d.type === 'number') what = `숫자${d.min !== undefined || d.max !== undefined ? ` ${d.min ?? ''}~${d.max ?? ''}` : ''}${d.decimals ? ` (소수 ${d.decimals}자리)` : ''}`;
@@ -34,7 +36,7 @@ export function promptSnippet(chat: string, slug: string, name: string, spec: Sp
   return [
     `[${name} 이미지]`,
     `매 답변 끝에 현재 상태를 아래 형식의 이미지 한 줄로 출력하세요. 주소는 바꾸지 말고 ? 뒤의 값만 채웁니다.`,
-    `![](${base}?${Object.keys(spec.params).map((k) => `${k}=값`).join('&')})`,
+    `![](${base}?${sent.map(([k]) => `${k}=값`).join('&')})`,
     ...lines,
     `값을 모르면 그 항목은 빼도 됩니다(기본값으로 그려짐). 글자 값의 공백은 %20으로 씁니다.`,
     `예시: ![](${example})`,
@@ -79,6 +81,7 @@ export function PreviewPanel(p: {
   const [server, setServer] = useState<{ url: string; ms: number; bytes: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const url = imageUrl(p.chat, p.slug, p.spec, p.values);
+  const rolled = normalizeParams(p.spec, p.values).values;
   const renderServer = async () => {
     setBusy(true);
     try {
@@ -97,7 +100,18 @@ export function PreviewPanel(p: {
     <div class="props">
       <h4>미리보기 값</h4>
       <p class="hint">여기서 바꾼 값은 가운데 그림에 바로 보여요. 서버를 쓰지 않아요.</p>
-      {Object.entries(p.spec.params).map(([k, d]) => (
+      {Object.entries(p.spec.params).map(([k, d]) =>
+        d.type === 'random' ? (
+          <div class="value" key={k}>
+            <span class="mono">
+              {k}
+              <small> 무작위{d.desc ? ' · ' + d.desc : ''}</small>
+            </span>
+            <span>
+              <b>{String(rolled[k])}</b> <small class="hint">다른 값이 바뀌면 새로 굴려요</small>
+            </span>
+          </div>
+        ) : (
         <label class="value" key={k}>
           <span class="mono">
             {k}
@@ -105,7 +119,8 @@ export function PreviewPanel(p: {
           </span>
           <ValueInput name={k} def={d} value={p.values[k] ?? ''} onChange={(v) => p.setValues({ ...p.values, [k]: v })} />
         </label>
-      ))}
+        ),
+      )}
       <button class="small" onClick={() => p.setValues(defaultsOf(p.spec))}>
         기본값으로
       </button>

@@ -1,6 +1,7 @@
 import type { El, Spec } from '../../src/spec';
 import type { Asset, Font } from '../api';
-import { AssetOptions, byFolder, fontFolderOf } from '../folders';
+import { byFolder, fontFolderOf } from '../folders';
+import { assetFile } from '../api';
 import { TYPE_LABEL } from '../model';
 import { BindField, NumInput, NumOrParam, PaintInput, WhenField, ColorInput } from './fields';
 
@@ -19,6 +20,8 @@ export function Props(p: {
   onAddAlias: (assetName: string) => string;
   /** add a text element next to the selected one */
   onAddLabel?: (text: string) => void;
+  /** line up with the canvas: left, center, right, top, middle, bottom */
+  onAlign?: (k: 'l' | 'c' | 'r' | 't' | 'm' | 'b') => void;
   actions: { dup: () => void; del: () => void; up: () => void; down: () => void; wrap: () => void; unwrap?: () => void };
 }) {
   const e: any = p.el;
@@ -29,6 +32,23 @@ export function Props(p: {
   );
   const families = [...new Set(p.fonts.map((f) => f.family))];
   const aliases = Object.entries(p.spec.assets ?? {});
+  // one list for the image picker: assets this template already uses, then every other asset in the library
+  const LIB = 'lib:';
+  const used = new Set(aliases.map(([, n]) => n));
+  const assetChoices: [string, string][] = [
+    ['', '(없음)'],
+    ...aliases.map(([a, n]) => [a, a === n || assetFile(n).replace(/\.[a-z0-9]+$/i, '') === a ? n : `${n} (${a})`] as [string, string]),
+    ...p.assets.filter((x) => !used.has(x.name)).map((x) => [LIB + x.name, x.name] as [string, string]),
+  ];
+  // a library pick becomes an alias of this template (added on first use)
+  const fromLibrary = (v: any): any => {
+    if (typeof v === 'string') return v.startsWith(LIB) ? p.onAddAlias(v.slice(LIB.length)) : v;
+    if (v && typeof v === 'object') {
+      if ('cases' in v) return { ...v, cases: Object.fromEntries(Object.entries(v.cases).map(([k, x]) => [k, fromLibrary(x)])), default: fromLibrary(v.default) };
+      if ('stops' in v) return { ...v, stops: v.stops.map((x: any) => ({ ...x, value: fromLibrary(x.value) })), default: fromLibrary(v.default) };
+    }
+    return v;
+  };
   const hasSize = e.type !== 'group' && e.type !== 'repeat';
 
   return (
@@ -79,6 +99,27 @@ export function Props(p: {
           </>
         )}
       </div>
+      {p.onAlign && (
+        <div class="field" title="캔버스에 맞춰 옮겨요 (지금 미리보기 값으로 그린 크기 기준)">
+          <span class="lbl">캔버스에 맞추기</span>
+          <div class="row wrap tight">
+          {(
+            [
+              ['l', '⇤ 왼쪽'],
+              ['c', '↔ 가운데'],
+              ['r', '⇥ 오른쪽'],
+              ['t', '⤒ 위'],
+              ['m', '↕ 가운데'],
+              ['b', '⤓ 아래'],
+            ] as const
+          ).map(([k, l]) => (
+            <button key={k} class="small" onClick={() => p.onAlign!(k)}>
+              {l}
+            </button>
+          ))}
+          </div>
+        </div>
+      )}
       {(e.type === 'group' || e.type === 'repeat') && <p class="hint">안에 든 요소의 좌표는 이 위치를 기준으로 해요.</p>}
 
       {e.type === 'text' && (
@@ -256,26 +297,15 @@ export function Props(p: {
           <BindField
             label="에셋"
             value={e.asset}
-            onChange={set('asset')}
+            onChange={(v) => p.onChange({ asset: fromLibrary(v) })}
             kind="select"
             params={params}
-            options={[['', '(고르기)'], ...aliases.map(([a, n]) => [a, a === n ? a : `${a} → ${n}`] as [string, string])]}
+            options={assetChoices}
           />
-          <div class="field">
-            <span class="lbl">라이브러리에서 고르기</span>
-            <select
-              value=""
-              onChange={(ev) => {
-                const n = ev.currentTarget.value;
-                if (!n) return;
-                const alias = p.onAddAlias(n);
-                if (typeof e.asset !== 'object') p.onChange({ asset: alias });
-              }}
-            >
-              <option value="">에셋 {p.assets.length}개…</option>
-              <AssetOptions assets={p.assets} />
-            </select>
-          </div>
+          <p class="hint">
+            에셋 목록 전체에서 바로 골라요. "(없음)"을 고르면 그 경우엔 그림을 그리지 않아요.
+            값마다 다른 그림을 쓰려면 <b>값에 따라</b>를 누르고 파라미터를 고른 뒤, <b>모두 추가</b>(또는 + 경우)로 줄을 만들어 줄마다 그림을 골라요. 맞는 줄이 없으면 "그 밖"의 그림이 나와요.
+          </p>
           <div class="field">
             <span class="lbl">맞추기</span>
             <select value={e.fit ?? 'contain'} onChange={(ev) => p.onChange({ fit: ev.currentTarget.value })}>

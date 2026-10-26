@@ -134,7 +134,7 @@ h3.folder-head { margin: 18px 0 0; font-size: 14px; } tr.folder-head td { backgr
 .chips { display: flex; flex-wrap: wrap; gap: 4px; } .chip { padding: 1px 6px; font-size: 12px; border-radius: 99px; font-family: ui-monospace, Consolas, monospace; }
 .param { border: 1px solid var(--line); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
 .param .pname { flex: 1; font-weight: 600; } .alias { flex: 1; }
-label.value { display: grid; grid-template-columns: 110px 1fr; gap: 6px; align-items: center; font-size: 12.5px; } label.value small { display: block; color: var(--muted); font-family: system-ui, sans-serif; }
+label.value, div.value { display: grid; grid-template-columns: 110px 1fr; gap: 6px; align-items: center; font-size: 12.5px; } label.value small, div.value small { display: block; color: var(--muted); font-family: system-ui, sans-serif; }
 label.value input[type=range] { flex: 1; min-width: 0; width: 100%; } label.value .num { width: 64px; flex: none; } label.value > * { min-width: 0; }
 textarea.url { font-size: 12px; word-break: break-all; } textarea.json { min-height: 60vh; font-size: 12px; white-space: pre; }
 @media (max-width: 1000px) { .panes { grid-template-columns: 190px 1fr 300px; } }

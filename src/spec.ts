@@ -18,7 +18,9 @@ export type ParamDef =
   | { type: 'text'; default?: string; maxLength?: number; alias?: string[]; desc?: string }
   | { type: 'number'; default?: number; min?: number; max?: number; decimals?: number; alias?: string[]; desc?: string }
   | { type: 'enum'; options: string[]; default?: string; alias?: string[]; desc?: string }
-  | { type: 'bool'; default?: boolean; alias?: string[]; desc?: string };
+  | { type: 'bool'; default?: boolean; alias?: string[]; desc?: string }
+  // Not read from the address: rolled from the template's other values, so the same address always draws the same result.
+  | { type: 'random'; min?: number; max?: number; options?: string[]; alias?: string[]; desc?: string };
 // `desc` (and an element's `name`) are only for people: the admin UI shows them and puts `desc` in the chatbot prompt.
 
 export interface Base {
@@ -130,8 +132,13 @@ export function validateSpec(spec: any): string[] {
   else {
     for (const [k, d] of Object.entries<any>(spec.params)) {
       if (!NAME.test(k)) errs.push(`param name "${k}" must match ${NAME}`);
-      if (!d || !['text', 'number', 'enum', 'bool'].includes(d.type)) errs.push(`param "${k}": bad type`);
+      if (!d || !['text', 'number', 'enum', 'bool', 'random'].includes(d.type)) errs.push(`param "${k}": bad type`);
       if (d?.type === 'enum' && (!Array.isArray(d.options) || !d.options.length)) errs.push(`param "${k}": enum needs options`);
+      if (d?.type === 'random' && d.options !== undefined && (!Array.isArray(d.options) || !d.options.length)) errs.push(`param "${k}": random options must be a non-empty list`);
+      if (d?.type === 'random' && d.options === undefined) {
+        const lo = d.min ?? 1, hi = d.max ?? 6;
+        if (!Number.isInteger(lo) || !Number.isInteger(hi) || lo > hi || hi - lo > 1e6) errs.push(`param "${k}": random needs whole numbers min <= max`);
+      }
     }
   }
   let count = 0;

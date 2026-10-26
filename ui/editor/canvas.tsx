@@ -175,7 +175,8 @@ export function Canvas(p: {
   });
 
   return (
-    <div class="stage" ref={stage}>
+    // pressing the empty area around the paper clears the selection (the panel then shows the canvas settings)
+    <div class="stage" ref={stage} onPointerDown={(ev) => ev.target === ev.currentTarget && p.onSelect(null)}>
       <div class="paper" style={{ width: cw * z + 'px', height: ch * z + 'px' }}>
         <div class="host" ref={host} />
         <div class="overlay" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerLeave={() => setHover(null)}>

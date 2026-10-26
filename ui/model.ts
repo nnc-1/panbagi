@@ -279,7 +279,8 @@ export function defaultsOf(spec: Spec): Record<string, string> {
     if (d.type === 'enum') o[k] = d.default ?? d.options[0] ?? '';
     else if (d.type === 'bool') o[k] = d.default ? '1' : '0';
     else if (d.type === 'number') o[k] = String(d.default ?? d.min ?? 0);
-    else o[k] = d.default ?? '';
+    else if (d.type === 'text') o[k] = d.default ?? '';
+    // random params are rolled, not entered
   }
   return o;
 }
