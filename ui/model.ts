@@ -293,3 +293,16 @@ export const BLANK_SPEC: Spec = {
     { type: 'text', name: '이름', x: 20, y: 16, w: 360, h: 36, text: '{name}', size: 24, weight: 700, fill: '#f3e6c4' },
   ],
 };
+
+/** the font families a template has loaded: its `fonts` list plus any family a text element already uses (older templates have no list) */
+export function loadedFonts(spec: Spec): string[] {
+  const out = [...(spec.fonts ?? [])];
+  const walk = (els: El[]) => {
+    for (const e of els) {
+      if (e.type === 'text' && e.font && !out.includes(e.font)) out.push(e.font);
+      if (e.type === 'group' || e.type === 'repeat') walk(e.children);
+    }
+  };
+  walk(spec.elements);
+  return out;
+}

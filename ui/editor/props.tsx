@@ -2,7 +2,7 @@ import type { El, Spec } from '../../src/spec';
 import type { Asset, Font } from '../api';
 import { byFolder, fontFolderOf } from '../folders';
 import { assetFile } from '../api';
-import { TYPE_LABEL } from '../model';
+import { TYPE_LABEL, loadedFonts } from '../model';
 import { BindField, NumInput, NumOrParam, PaintInput, WhenField, ColorInput } from './fields';
 
 /** a bar's value/max as text: a param name stays a name, a number stays a number */
@@ -173,7 +173,20 @@ export function Props(p: {
           <div class="grid2">
             <div class="field">
               <span class="lbl">폰트</span>
-              <FontSelect value={e.font ?? ''} onChange={(f) => p.onChange({ font: f || undefined })} fonts={p.fonts} settings={p.settings} />
+              <select value={e.font ?? ''} onChange={(ev) => p.onChange({ font: ev.currentTarget.value || undefined })}>
+                <option value="">기본 폰트</option>
+                {loadedFonts(p.spec).map((f) => (
+                  <option key={f} value={f}>
+                    {f}
+                    {p.fonts.some((x) => x.family === f) ? '' : ' (없음 → 기본)'}
+                  </option>
+                ))}
+              </select>
+              {p.onOpenAssets && (
+                <button class="ghost small" onClick={p.onOpenAssets} title="에셋 탭에서 폰트를 불러와요">
+                  폰트 불러오기…
+                </button>
+              )}
             </div>
             <div class="field">
               <span class="lbl">굵기</span>
