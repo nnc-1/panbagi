@@ -53,11 +53,18 @@ function hash32(s: string): number {
   return (t ^ (t >>> 14)) >>> 0;
 }
 
+/** The address may carry `hash=1..10000`: one more number mixed into every roll, so a chatbot can ask for a fresh roll without any other value changing. */
+export const HASH_KEY = 'hash';
+export const HASH_MAX = 10000;
+
 /** A random param's value: decided by its name and the other values, so one address always gets the same roll. */
-export function rollRandom(name: string, def: Extract<ParamDef, { type: 'random' }>, seed: string): string | number {
+export function rollRandom(name: string, def: Extract<ParamDef, { type: 'random' }>, seed: string, values: Values = {}): string | number {
   const r = hash32(name + '|' + seed);
   if (def.options?.length) return def.options[r % def.options.length];
-  const lo = Math.round(def.min ?? 1), hi = Math.max(lo, Math.round(def.max ?? 6));
+  // a bound may name a number param (already normalized in `values`)
+  const bound = (v: number | string | undefined, d: number) => Math.round(typeof v === 'string' ? Number(values[v] ?? d) || 0 : (v ?? d));
+  const lo = bound(def.min, 1);
+  const hi = Math.min(lo + 1e6, Math.max(lo, bound(def.max, 6)));
   return lo + (r % (hi - lo + 1));
 }
 
@@ -86,8 +93,15 @@ export function normalizeParams(spec: Spec, query: URLSearchParams | Record<stri
     values[k] = v;
     parts.push(`${k}=${encodeURIComponent(String(v))}`);
   }
+  const randoms = Object.entries(spec.params).filter(([, d]) => d.type === 'random');
+  // the built-in hash (unless the template has its own param by that name) only matters when something is rolled
+  if (randoms.length && !(HASH_KEY in spec.params)) {
+    const raw = entries.find(([k]) => k.toLowerCase() === HASH_KEY)?.[1];
+    const n = raw === undefined ? NaN : Math.round(Number(raw));
+    if (n >= 1 && n <= HASH_MAX) parts.push(`${HASH_KEY}=${n}`);
+  }
   const seed = parts.join('&');
-  for (const [k, def] of Object.entries(spec.params)) if (def.type === 'random') values[k] = rollRandom(k, def, seed);
+  for (const [k, def] of randoms) if (def.type === 'random') values[k] = rollRandom(k, def, seed, values);
   // the rolls follow from the other values, so the storage key needs only those
   return { values, normalized: seed };
 }

@@ -4,6 +4,25 @@ import { renameParam, usesParam } from '../model';
 import { NumInput } from './fields';
 
 const NAME = /^[A-Za-z_][A-Za-z0-9_]{0,31}$/;
+
+/** a dice bound: a whole number, or a number param the chatbot sends (e.g. sides=20) */
+function Bound(p: { value: number | string | undefined; fallback: number; spec: Spec; onChange: (v: number | string | undefined) => void }) {
+  const nums = Object.keys(p.spec.params).filter((k) => p.spec.params[k].type === 'number');
+  const isParam = typeof p.value === 'string';
+  return (
+    <span class="with-btn">
+      <select style={{ flex: isParam ? '1' : '0 0 8em' }} value={isParam ? String(p.value) : ''} onChange={(e) => p.onChange(e.currentTarget.value || p.fallback)}>
+        <option value="">직접 입력</option>
+        {nums.map((k) => (
+          <option key={k} value={k}>
+            파라미터 {k}
+          </option>
+        ))}
+      </select>
+      {!isParam && <NumInput value={p.value} onChange={(v) => p.onChange(v)} step={1} />}
+    </span>
+  );
+}
 const TYPE_LABEL = { text: '글자', number: '숫자', enum: '목록에서 하나', bool: '예/아니오', random: '무작위 (주사위)' } as const;
 
 /** Comma-separated list, applied when the field loses focus. Keeps what was typed across re-renders until then. */
@@ -125,13 +144,13 @@ function ParamCard(p: { name: string; def: ParamDef; spec: Spec; onSpec: (s: Spe
               </label>
             ) : (
               <>
-                <label>
+                <label class="span2">
                   최소
-                  <NumInput value={d.min} onChange={(v) => set({ min: v })} step={1} />
+                  <Bound value={d.min} fallback={1} spec={p.spec} onChange={(v) => set({ min: v })} />
                 </label>
-                <label>
+                <label class="span2">
                   최대
-                  <NumInput value={d.max} onChange={(v) => set({ max: v })} step={1} />
+                  <Bound value={d.max} fallback={6} spec={p.spec} onChange={(v) => set({ max: v })} />
                 </label>
               </>
             )}
@@ -146,7 +165,8 @@ function ParamCard(p: { name: string; def: ParamDef; spec: Spec; onSpec: (s: Spe
       </div>
       {d.type === 'random' && (
         <p class="hint">
-          챗봇이 보내는 값이 아니라 판박이가 굴려요. 주소의 다른 값으로 굴려서 같은 주소는 늘 같은 결과이고, 값이 하나라도 바뀌면 새로 굴려요. 매 턴 새로 굴리려면 턴 번호 같은 숫자 파라미터를 하나 두세요.
+          챗봇이 보내는 값이 아니라 판박이가 굴려요(주소에 이 이름으로 값을 보내도 무시해요). 주소의 다른 값으로 굴려서 같은 주소는 늘 같은 결과이고, 값이 하나라도 바뀌면 새로 굴려요.
+          챗봇 안내문에는 <code>hash</code>(1~10000)가 함께 들어가요. 챗봇이 매 답변 다른 숫자를 넣으면 매번 새로 굴려요. 최소·최대는 숫자 파라미터로 정할 수도 있어요(예: <code>sides=20</code>이면 1~20).
           글자에 <code>{'{' + p.name + '}'}</code>로 넣거나, 이미지·색의 "값에 따라"에서 골라 써요.
         </p>
       )}

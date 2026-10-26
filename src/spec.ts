@@ -19,8 +19,9 @@ export type ParamDef =
   | { type: 'number'; default?: number; min?: number; max?: number; decimals?: number; alias?: string[]; desc?: string }
   | { type: 'enum'; options: string[]; default?: string; alias?: string[]; desc?: string }
   | { type: 'bool'; default?: boolean; alias?: string[]; desc?: string }
-  // Not read from the address: rolled from the template's other values, so the same address always draws the same result.
-  | { type: 'random'; min?: number; max?: number; options?: string[]; alias?: string[]; desc?: string };
+  // Not read from the address: rolled from the template's other values (and the address's `hash`), so the same address always draws the same result.
+  // min/max may name a number param, so the chatbot can set the range (e.g. a d20) without choosing the roll.
+  | { type: 'random'; min?: number | string; max?: number | string; options?: string[]; alias?: string[]; desc?: string };
 // `desc` (and an element's `name`) are only for people: the admin UI shows them and puts `desc` in the chatbot prompt.
 
 export interface Base {
@@ -139,7 +140,10 @@ export function validateSpec(spec: any): string[] {
       if (d?.type === 'random' && d.options !== undefined && (!Array.isArray(d.options) || !d.options.length)) errs.push(`param "${k}": random options must be a non-empty list`);
       if (d?.type === 'random' && d.options === undefined) {
         const lo = d.min ?? 1, hi = d.max ?? 6;
-        if (!Number.isInteger(lo) || !Number.isInteger(hi) || lo > hi || hi - lo > 1e6) errs.push(`param "${k}": random needs whole numbers min <= max`);
+        const ref = (v: unknown) => typeof v === 'string' && spec.params[v]?.type === 'number';
+        if (typeof lo === 'string' || typeof hi === 'string') {
+          if ((typeof lo === 'string' && !ref(lo)) || (typeof hi === 'string' && !ref(hi))) errs.push(`param "${k}": random min/max must be a number or a number param`);
+        } else if (!Number.isInteger(lo) || !Number.isInteger(hi) || lo > hi || hi - lo > 1e6) errs.push(`param "${k}": random needs whole numbers min <= max`);
       }
     }
   }

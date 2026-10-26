@@ -43,6 +43,32 @@ describe('normalizeParams', () => {
     expect(validateSpec(spec)).toEqual([]);
     expect(validateSpec({ ...spec, params: { d: { type: 'random', min: 6, max: 1 } } })).not.toEqual([]);
   });
+  it('random range can come from a number param, and hash=1..10000 mixes into the roll', () => {
+    const spec: Spec = {
+      canvas: { w: 10, h: 10 },
+      params: { sides: { type: 'number', default: 6, min: 2, max: 100 }, dice: { type: 'random', min: 1, max: 'sides' } },
+      elements: [],
+    };
+    expect(validateSpec(spec)).toEqual([]);
+    expect(validateSpec({ ...spec, params: { dice: { type: 'random', max: 'nope' } } })).not.toEqual([]);
+    const seen = new Set<number>();
+    for (let h = 1; h <= 400; h++) {
+      const r = normalizeParams(spec, { sides: '20', hash: String(h) });
+      expect(r.normalized).toBe(`sides=20&hash=${h}`);
+      const d = r.values.dice as number;
+      expect(d).toBeGreaterThanOrEqual(1);
+      expect(d).toBeLessThanOrEqual(20);
+      seen.add(d);
+    }
+    expect(seen.size).toBe(20);
+    // same address, same roll; a bad hash is left out like a missing one
+    expect(normalizeParams(spec, { hash: '77' }).values).toEqual(normalizeParams(spec, { hash: '77' }).values);
+    expect(normalizeParams(spec, { hash: '0' }).normalized).toBe('sides=6');
+    expect(normalizeParams(spec, { hash: '10001' }).normalized).toBe('sides=6');
+    // templates without random params ignore it (the stored image stays the same)
+    const plain: Spec = { canvas: { w: 10, h: 10 }, params: { a: { type: 'number' } }, elements: [] };
+    expect(normalizeParams(plain, { a: '1', hash: '5' }).normalized).toBe('a=1');
+  });
   it('random values drive any element: picked colors, ranges, conditions, gauges, repeats', () => {
     const spec: Spec = {
       canvas: { w: 100, h: 100 },

@@ -14,6 +14,7 @@ const choicesOf = (d: ParamDef | undefined): string[] => {
   if (d?.type === 'random') {
     if (d.options) return d.options;
     const lo = d.min ?? 1, hi = d.max ?? 6;
+    if (typeof lo !== 'number' || typeof hi !== 'number') return []; // range set by a param
     return hi - lo < 50 ? Array.from({ length: hi - lo + 1 }, (_, i) => String(lo + i)) : [];
   }
   return [];

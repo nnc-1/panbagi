@@ -186,7 +186,7 @@ WebP 무손실은 디코드했을 때 PNG와 픽셀이 완전히 같아서(직�
 값 연결은 `{치환}`, 수치 연결(`value`), 조건·분기(`when`, `switch`, `steps`)만 지원하고 코드 실행은 없습니다.
 `when`: `{param, eq|ne|lt|lte|gt|gte|in}` 과 `and`/`or`/`not`.
 `switch`: `{switch:"param", cases:{...}, default}` · `steps`: `{steps:"param", stops:[{gte,value}], default}` — 어떤 속성에도 쓸 수 있습니다.
-파라미터 종류는 `text`·`number`·`enum`·`bool`과 `random`입니다. `random`(`min`~`max` 정수, 기본 1~6, 또는 `options` 목록에서 하나)은 주소로 받지 않고, 다른 파라미터의 정규화한 값으로 굴립니다. 그래서 같은 주소는 늘 같은 결과이고 저장 키도 그대로입니다.
+파라미터 종류는 `text`·`number`·`enum`·`bool`과 `random`입니다. `random`(`min`~`max` 정수 기본 1~6, 각각 숫자 파라미터 이름도 가능, 또는 `options` 목록에서 하나)은 주소로 받지 않고, 다른 파라미터의 정규화한 값과 주소의 `hash`(1~10000 정수, 무작위 파라미터가 있는 템플릿만, 정규화 문자열에 포함)로 굴립니다. 그래서 같은 주소는 늘 같은 결과입니다.
 
 한계: 애니메이션 없음, 그림자·필터 효과 없음. 캔버스 최대 4096, 출력 긴 변은 `MAX_PIXELS`(기본 2048)로 제한.
 
