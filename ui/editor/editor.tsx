@@ -396,7 +396,7 @@ function EditorInner(p: { detail: TemplateDetail; onReload: (d: TemplateDetail) 
                   assets={data.assets}
                   settings={data.settings}
                   onChange={(patch) => patchSel(patch)}
-                  onAddAlias={addAlias}
+                  onOpenAssets={() => setTab('assets')}
                   onAddLabel={addLabel}
                   onAlign={align}
                   actions={{ dup, del, up: () => shift(1), down: () => shift(-1), wrap, unwrap: selEl.type === 'group' ? unwrap : undefined }}
