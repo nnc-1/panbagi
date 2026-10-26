@@ -38,7 +38,27 @@ function normalizeOne(def: ParamDef, raw: string | undefined): string | number |
     }
     case 'bool':
       return raw === undefined ? !!def.default : TRUE.has(raw.trim().toLowerCase());
+    case 'random':
+      return ''; // rolled in normalizeParams, once every other value is known
   }
+}
+
+/** FNV-1a, then one mulberry32 step: a well-spread 32-bit number from a string. */
+function hash32(s: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 0x01000193);
+  let t = (h + 0x6d2b79f5) | 0;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return (t ^ (t >>> 14)) >>> 0;
+}
+
+/** A random param's value: decided by its name and the other values, so one address always gets the same roll. */
+export function rollRandom(name: string, def: Extract<ParamDef, { type: 'random' }>, seed: string): string | number {
+  const r = hash32(name + '|' + seed);
+  if (def.options?.length) return def.options[r % def.options.length];
+  const lo = Math.round(def.min ?? 1), hi = Math.max(lo, Math.round(def.max ?? 6));
+  return lo + (r % (hi - lo + 1));
 }
 
 /**
@@ -61,9 +81,13 @@ export function normalizeParams(spec: Spec, query: URLSearchParams | Record<stri
   const values: Values = {};
   const parts: string[] = [];
   for (const [k, def] of Object.entries(spec.params)) {
+    if (def.type === 'random') continue; // never taken from the address
     const v = normalizeOne(def, raw.get(k));
     values[k] = v;
     parts.push(`${k}=${encodeURIComponent(String(v))}`);
   }
-  return { values, normalized: parts.join('&') };
+  const seed = parts.join('&');
+  for (const [k, def] of Object.entries(spec.params)) if (def.type === 'random') values[k] = rollRandom(k, def, seed);
+  // the rolls follow from the other values, so the storage key needs only those
+  return { values, normalized: seed };
 }

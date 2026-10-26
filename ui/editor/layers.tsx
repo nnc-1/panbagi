@@ -108,6 +108,13 @@ export function Layers(p: {
 
   return (
     <div class="layers" ref={box} onClick={(ev) => ev.target === ev.currentTarget && p.onSelect(null)}>
+      <div class={'layer' + (p.sel ? '' : ' on')} onClick={() => p.onSelect(null)} title="캔버스 크기와 배경색">
+        <span class="twisty" />
+        <span class="ico">▭</span>
+        <span class="lname">
+          캔버스 {p.spec.canvas.w}×{p.spec.canvas.h}
+        </span>
+      </div>
       {rows(p.spec.elements, [], 0)}
       {!p.spec.elements.length && <p class="empty small">위의 + 버튼으로 요소를 추가하세요.</p>}
       <p class="hint small">위에 있을수록 앞에 그려져요. 끌어서 순서를 바꾸고, 그룹·반복 가운데에 놓으면 안으로 들어가요.</p>

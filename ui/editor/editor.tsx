@@ -7,6 +7,7 @@ import { assetsFor, fontsFor } from '../preview';
 import { normalizeParams } from '../../src/params';
 import { Modal, fail, toast, useData } from '../ui';
 import { uploadFiles } from '../pages/assets';
+import { setLeaveGuard } from '../guard';
 import { Canvas } from './canvas';
 import { Layers } from './layers';
 import { CanvasProps, Props } from './props';
@@ -99,7 +100,11 @@ function EditorInner(p: { detail: TemplateDetail; onReload: (d: TemplateDetail) 
   const defaultFamily = data.settings.default_font ?? data.fonts[0]?.family;
   const knownFamilies = useMemo(() => new Set(data.fonts.map((f) => f.family)), [data.fonts]);
 
-  // warn before leaving with unsaved changes
+  // warn before leaving with unsaved changes: Back, links (hash routes), and closing or reloading the tab
+  useEffect(() => {
+    setLeaveGuard(dirty ? () => confirm('저장하지 않은 변경이 있어요. 나가면 사라져요. 나갈까요?') : null);
+    return () => setLeaveGuard(null);
+  }, [dirty]);
   useEffect(() => {
     const f = (e: BeforeUnloadEvent) => {
       if (dirty) e.preventDefault();
@@ -265,10 +270,20 @@ function EditorInner(p: { detail: TemplateDetail; onReload: (d: TemplateDetail) 
     return () => removeEventListener('keydown', f);
   }, []);
 
-  const hidden = useMemo(() => {
-    const vals = normalizeParams(spec, values).values;
-    return new Set(layout(spec, vals).filter((b) => !b.visible).map((b) => b.path.join('.')));
-  }, [spec, values]);
+  const boxes = useMemo(() => layout(spec, normalizeParams(spec, values).values), [spec, values]);
+  const hidden = useMemo(() => new Set(boxes.filter((b) => !b.visible).map((b) => b.path.join('.'))), [boxes]);
+  /** line the selected element up with the canvas edges or middle (as it is drawn with the current preview values) */
+  const align = (k: 'l' | 'c' | 'r' | 't' | 'm' | 'b') => {
+    const b = sel0 && boxes.find((x) => x.path.join('.') === sel0.join('.'));
+    const e: any = selEl;
+    if (!b || !e) return;
+    const { w: cw, h: ch } = spec.canvas;
+    const horiz = k === 'l' || k === 'c' || k === 'r';
+    const key = horiz ? 'x' : 'y';
+    if (e[key] !== undefined && typeof e[key] !== 'number') return toast(`${key}가 값에 따라 바뀌어서 맞출 수 없어요`);
+    const d = horiz ? (k === 'l' ? -b.x : k === 'c' ? (cw - b.w) / 2 - b.x : cw - b.w - b.x) : k === 't' ? -b.y : k === 'm' ? (ch - b.h) / 2 - b.y : ch - b.h - b.y;
+    patchSel({ [key]: Math.round(((e[key] ?? 0) + d) * 10) / 10 }, 'align' + Math.random());
+  };
 
   const published = !!p.detail.published_version;
   const draftDiffers = published && publishedJson !== null && publishedJson !== JSON.stringify(spec);
@@ -276,7 +291,7 @@ function EditorInner(p: { detail: TemplateDetail; onReload: (d: TemplateDetail) 
   return (
     <div class="editor">
       <div class="toolbar">
-        <a href={`#/chat/${chat}`} class="btn ghost" title="채팅으로" onClick={(e) => dirty && !confirm('저장하지 않은 변경이 있어요. 나갈까요?') && e.preventDefault()}>
+        <a href={`#/chat/${chat}`} class="btn ghost" title="채팅으로">
           ←
         </a>
         <input class="tname" value={name} onInput={(e) => setName(e.currentTarget.value)} title="템플릿 표시 이름" />
@@ -320,7 +335,7 @@ function EditorInner(p: { detail: TemplateDetail; onReload: (d: TemplateDetail) 
           <Layers
             spec={spec}
             sel={sel0}
-            onSelect={(s) => (setSel(s), s && setTab('props'))}
+            onSelect={(s) => (setSel(s), setTab('props'))}
             hidden={hidden}
             onMove={(from, parent, index) => {
               const r = moveTo(spec, from, parent, index);
@@ -346,7 +361,7 @@ function EditorInner(p: { detail: TemplateDetail; onReload: (d: TemplateDetail) 
             defaultFamily={defaultFamily}
             knownFamilies={knownFamilies}
             sel={sel0}
-            onSelect={(s) => (setSel(s), s && setTab('props'))}
+            onSelect={(s) => (setSel(s), setTab('props'))}
             onPatch={(path, patch, key) => h.set((s) => updateAt(s, path, (e) => Object.assign(e, patch)), key)}
             zoom={zoom}
             fontsVersion={fontsVersion}
@@ -381,6 +396,7 @@ function EditorInner(p: { detail: TemplateDetail; onReload: (d: TemplateDetail) 
                   onChange={(patch) => patchSel(patch)}
                   onAddAlias={addAlias}
                   onAddLabel={addLabel}
+                  onAlign={align}
                   actions={{ dup, del, up: () => shift(1), down: () => shift(-1), wrap, unwrap: selEl.type === 'group' ? unwrap : undefined }}
                 />
               ) : (

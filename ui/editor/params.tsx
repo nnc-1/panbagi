@@ -6,7 +6,7 @@ import { renameParam, usesParam } from '../model';
 import { NumInput } from './fields';
 
 const NAME = /^[A-Za-z_][A-Za-z0-9_]{0,31}$/;
-const TYPE_LABEL = { text: '글자', number: '숫자', enum: '목록에서 하나', bool: '예/아니오' } as const;
+const TYPE_LABEL = { text: '글자', number: '숫자', enum: '목록에서 하나', bool: '예/아니오', random: '무작위 (주사위)' } as const;
 
 /** Comma-separated list, applied when the field loses focus. Keeps what was typed across re-renders until then. */
 function ListInput(p: { value?: string[]; onChange: (v: string[]) => void }) {
@@ -28,6 +28,7 @@ function ParamCard(p: { name: string; def: ParamDef; spec: Spec; onSpec: (s: Spe
     const base: any = { type: t, alias: d.alias, desc: d.desc };
     if (t === 'enum') base.options = ['none', 'A', 'B'];
     if (t === 'number') Object.assign(base, { default: 0, min: 0, max: 100 });
+    if (t === 'random') Object.assign(base, { min: 1, max: 6 });
     for (const k of Object.keys(base)) if (base[k] === undefined) delete base[k];
     p.onSpec({ ...p.spec, params: { ...p.spec.params, [p.name]: base } });
   };
@@ -110,6 +111,34 @@ function ParamCard(p: { name: string; def: ParamDef; spec: Spec; onSpec: (s: Spe
             </label>
           </>
         )}
+        {d.type === 'random' && (
+          <>
+            <label class="span2">
+              굴리는 방식
+              <select value={d.options ? 'list' : 'range'} onChange={(e) => set(e.currentTarget.value === 'list' ? { options: ['a', 'b', 'c'], min: undefined, max: undefined } : { options: undefined, min: 1, max: 6 })}>
+                <option value="range">숫자 범위 (주사위)</option>
+                <option value="list">목록에서 하나 뽑기</option>
+              </select>
+            </label>
+            {d.options ? (
+              <label class="span2">
+                뽑을 값 (쉼표로 구분)
+                <ListInput value={d.options} onChange={(options) => options.length && set({ options })} />
+              </label>
+            ) : (
+              <>
+                <label>
+                  최소
+                  <NumInput value={d.min} onChange={(v) => set({ min: v })} step={1} />
+                </label>
+                <label>
+                  최대
+                  <NumInput value={d.max} onChange={(v) => set({ max: v })} step={1} />
+                </label>
+              </>
+            )}
+          </>
+        )}
         {d.type === 'bool' && (
           <label class="check">
             <input type="checkbox" checked={!!d.default} onChange={(e) => set({ default: e.currentTarget.checked || undefined })} />
@@ -117,10 +146,18 @@ function ParamCard(p: { name: string; def: ParamDef; spec: Spec; onSpec: (s: Spe
           </label>
         )}
       </div>
+      {d.type === 'random' && (
+        <p class="hint">
+          챗봇이 보내는 값이 아니라 판박이가 굴려요. 주소의 다른 값으로 굴려서 같은 주소는 늘 같은 결과이고, 값이 하나라도 바뀌면 새로 굴려요. 매 턴 새로 굴리려면 턴 번호 같은 숫자 파라미터를 하나 두세요.
+          글자에 <code>{'{' + p.name + '}'}</code>로 넣거나, 이미지·색의 "값에 따라"에서 골라 써요.
+        </p>
+      )}
+      {d.type !== 'random' && (
       <label>
         다른 이름 (쉼표로 구분, 챗봇이 이렇게 써도 알아들어요)
         <ListInput value={d.alias} onChange={(alias) => set({ alias })} />
       </label>
+      )}
     </div>
   );
 }

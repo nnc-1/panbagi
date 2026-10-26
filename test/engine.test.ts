@@ -21,6 +21,28 @@ describe('sample template', () => {
 });
 
 describe('normalizeParams', () => {
+  it('rolls random params from the other values: same address, same roll; ignores a value sent for it', () => {
+    const spec: Spec = {
+      canvas: { w: 10, h: 10 },
+      params: { turn: { type: 'number', min: 0, max: 1000 }, dice: { type: 'random', min: 1, max: 6 }, face: { type: 'random', options: ['a', 'b', 'c'] } },
+      elements: [],
+    };
+    const a = normalizeParams(spec, { turn: '3' });
+    expect(normalizeParams(spec, { turn: '3', dice: '6' }).values).toEqual(a.values);
+    expect(a.normalized).toBe('turn=3');
+    const rolls = new Set<number>(), faces = new Set<string>();
+    for (let t = 0; t < 200; t++) {
+      const v = normalizeParams(spec, { turn: String(t) }).values;
+      expect(v.dice).toBeGreaterThanOrEqual(1);
+      expect(v.dice).toBeLessThanOrEqual(6);
+      rolls.add(v.dice as number);
+      faces.add(v.face as string);
+    }
+    expect(rolls.size).toBe(6);
+    expect(faces.size).toBe(3);
+    expect(validateSpec(spec)).toEqual([]);
+    expect(validateSpec({ ...spec, params: { d: { type: 'random', min: 6, max: 1 } } })).not.toEqual([]);
+  });
   it('takes 500 letters by default and never more than 2000', () => {
     const spec = { canvas: { w: 10, h: 10 }, params: { a: { type: 'text' }, b: { type: 'text', maxLength: 99999 } }, elements: [] } as any;
     const v = normalizeParams(spec, { a: '가'.repeat(600), b: 'x'.repeat(3000) }).values;

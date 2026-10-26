@@ -1,6 +1,7 @@
 import { render } from 'preact';
 import { useCallback, useEffect, useState } from 'preact/hooks';
 import { UI_VERSION } from './version';
+import { mayLeave } from './guard';
 import { get, token, type Asset, type Chat, type Font } from './api';
 import { DataCtx, Toasts, fail, type AppData } from './ui';
 import { ChatList, ChatPage } from './pages/chats';
@@ -11,7 +12,13 @@ import { Editor } from './editor/editor';
 function useHash() {
   const [h, setH] = useState(location.hash.slice(1) || '/');
   useEffect(() => {
-    const f = () => setH(location.hash.slice(1) || '/');
+    let restoring = false;
+    const f = (e: HashChangeEvent) => {
+      if (restoring) return void (restoring = false);
+      // unsaved edits: stay on the page (put the old address back) unless the user agrees to leave
+      if (!mayLeave()) return void ((restoring = true), location.replace(e.oldURL));
+      setH(location.hash.slice(1) || '/');
+    };
     addEventListener('hashchange', f);
     return () => removeEventListener('hashchange', f);
   }, []);

@@ -126,6 +126,26 @@ export function AssetsPage() {
     if (done) toast(`${done}(으)로 옮겼어요. 쓰던 템플릿도 같이 바뀌었어요.`);
     reload(['assets']);
   };
+  const rename = async (a: Asset) => {
+    const file = assetFile(a.name);
+    const dot = file.lastIndexOf('.');
+    const ext = dot > 0 ? file.slice(dot) : '';
+    const typed = prompt('새 이름 (영문·숫자·_ - . 만, 확장자는 그대로 붙어요)', dot > 0 ? file.slice(0, dot) : file)?.trim();
+    if (!typed) return;
+    const base = typed.toLowerCase().endsWith(ext.toLowerCase()) && ext ? typed.slice(0, -ext.length) : typed;
+    const folderPart = assetFolder(a.name);
+    const to = (folderPart ? folderPart + '/' : '') + base + ext;
+    if (to === a.name) return;
+    if (!ASSET_NAME.test(to)) return toast('영문, 숫자, _ - . 만 쓸 수 있어요 (64자까지)');
+    if (assets.some((x) => x.name === to)) return toast('같은 이름의 에셋이 이미 있어요');
+    try {
+      await send('POST', `/assets/${encodeURIComponent(a.name)}/move`, { to });
+      toast(`${to}(으)로 바꿨어요. 쓰던 템플릿도 같이 바뀌었어요.`);
+    } catch (e) {
+      fail(e);
+    }
+    reload(['assets']);
+  };
   const renameFolder = async (from: string, to: string) => {
     setBusy(true);
     let list = assets;
@@ -151,6 +171,9 @@ export function AssetsPage() {
           바꾸기
           <input type="file" hidden accept=".svg,.png,.webp,.jpg,.jpeg" onChange={(e) => replace(a, e.currentTarget.files?.[0])} />
         </label>
+        <button class="small" onClick={() => rename(a)}>
+          이름 바꾸기
+        </button>
         <button class="small" onClick={() => setMoving(a)}>
           옮기기
         </button>
