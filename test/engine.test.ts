@@ -43,6 +43,27 @@ describe('normalizeParams', () => {
     expect(validateSpec(spec)).toEqual([]);
     expect(validateSpec({ ...spec, params: { d: { type: 'random', min: 6, max: 1 } } })).not.toEqual([]);
   });
+  it('random values drive any element: picked colors, ranges, conditions, gauges, repeats', () => {
+    const spec: Spec = {
+      canvas: { w: 100, h: 100 },
+      params: { turn: { type: 'number', min: 0, max: 1000 }, dice: { type: 'random', min: 1, max: 6 }, luck: { type: 'random', options: ['good', 'bad'] } },
+      elements: [
+        { type: 'shape', name: 'six', when: { param: 'dice', eq: 6 }, w: 1, h: 1, fill: '#000001' },
+        { type: 'shape', w: 1, h: 1, fill: { switch: 'luck', cases: { good: '#00aa00', bad: '#aa0000' } } },
+        { type: 'shape', w: 1, h: 1, fill: { steps: 'dice', stops: [{ gte: 4, value: '#0000ff' }], default: '#ffff00' } },
+        { type: 'bar', w: 60, h: 4, value: 'dice', max: 6 },
+        { type: 'repeat', count: 'dice', max: 6, dx: 10, children: [{ type: 'shape', w: 1, h: 1, fill: '#123456' }] },
+      ],
+    };
+    for (let t = 0; t < 30; t++) {
+      const v = normalizeParams(spec, { turn: String(t) }).values;
+      const svg = composeSvg(spec, v, new Map()).svg;
+      expect(svg.includes('#000001')).toBe(v.dice === 6);
+      expect(svg).toContain(v.luck === 'good' ? '#00aa00' : '#aa0000');
+      expect(svg).toContain((v.dice as number) >= 4 ? '#0000ff' : '#ffff00');
+      expect(svg.split('#123456').length - 1).toBe(v.dice);
+    }
+  });
   it('takes 500 letters by default and never more than 2000', () => {
     const spec = { canvas: { w: 10, h: 10 }, params: { a: { type: 'text' }, b: { type: 'text', maxLength: 99999 } }, elements: [] } as any;
     const v = normalizeParams(spec, { a: '가'.repeat(600), b: 'x'.repeat(3000) }).values;
