@@ -152,3 +152,9 @@ header.top nav a { white-space: nowrap; }
   table.list td { display: block; border-top: 0; padding: 6px 12px; } table.list tr { display: block; border-top: 1px solid var(--line); padding: 6px 0; }
   table.list tr:first-child { border-top: 0; } table.list td.row.end { display: flex; justify-content: flex-start; flex-wrap: wrap; }
 }
+.asset-use { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line, #e5e5e5); }
+.asset-use .thumb { height: 64px; margin: 0; font-size: 11px; }
+.asset-use-body { display: grid; gap: 4px; min-width: 0; } .asset-use-body select { width: 100%; }
+.asset-use .used, .font-use .used { color: var(--muted, #888); } .asset-use .used.none { color: #b07400; }
+.font-use { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: center; padding: 6px 0; font-size: 13px; }
+.font-use small { display: block; } .warn-text { color: #c0392b; }

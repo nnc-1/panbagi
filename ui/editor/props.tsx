@@ -10,6 +10,31 @@ const ref = (v: unknown) => (typeof v === 'string' || typeof v === 'number' ? St
 
 const WEIGHTS: [string, string][] = [100, 200, 300, 400, 500, 600, 700, 800, 900].map((w) => [String(w), w === 400 ? '400 보통' : w === 700 ? '700 굵게' : String(w)]);
 
+/** font family picker grouped by font folder; '' is the default font */
+export function FontSelect(p: { value: string; onChange: (family: string) => void; fonts: Font[]; settings: Record<string, string> }) {
+  const families = [...new Set(p.fonts.map((f) => f.family))];
+  return (
+    <select value={p.value} onChange={(ev) => p.onChange(ev.currentTarget.value)}>
+      <option value="">기본 폰트</option>
+      {byFolder(families, (f) => fontFolderOf(p.settings, f)).map(([folder, list]) => {
+        const opts = list.map((f) => (
+          <option key={f} value={f}>
+            {f}
+          </option>
+        ));
+        return folder ? (
+          <optgroup key={folder} label={'📁 ' + folder}>
+            {opts}
+          </optgroup>
+        ) : (
+          opts
+        );
+      })}
+      {p.value && !families.includes(p.value) && <option value={p.value}>{p.value} (없음 → 기본)</option>}
+    </select>
+  );
+}
+
 export function Props(p: {
   el: El;
   spec: Spec;
@@ -30,7 +55,6 @@ export function Props(p: {
   const B = (k: string, label: string, kind: 'number' | 'text' | 'color' | 'paint' | 'select', extra: Record<string, any> = {}) => (
     <BindField label={label} value={e[k]} onChange={set(k)} kind={kind} params={params} {...extra} />
   );
-  const families = [...new Set(p.fonts.map((f) => f.family))];
   const aliases = Object.entries(p.spec.assets ?? {});
   // one list for the image picker: assets this template already uses, then every other asset in the library
   const LIB = 'lib:';
@@ -160,24 +184,7 @@ export function Props(p: {
           <div class="grid2">
             <div class="field">
               <span class="lbl">폰트</span>
-              <select value={e.font ?? ''} onChange={(ev) => p.onChange({ font: ev.currentTarget.value || undefined })}>
-                <option value="">기본 폰트</option>
-                {byFolder(families, (f) => fontFolderOf(p.settings, f)).map(([folder, list]) => {
-                  const opts = list.map((f) => (
-                    <option key={f} value={f}>
-                      {f}
-                    </option>
-                  ));
-                  return folder ? (
-                    <optgroup key={folder} label={'📁 ' + folder}>
-                      {opts}
-                    </optgroup>
-                  ) : (
-                    opts
-                  );
-                })}
-                {e.font && !families.includes(e.font) && <option value={e.font}>{e.font} (없음 → 기본)</option>}
-              </select>
+              <FontSelect value={e.font ?? ''} onChange={(f) => p.onChange({ font: f || undefined })} fonts={p.fonts} settings={p.settings} />
             </div>
             <div class="field">
               <span class="lbl">굵기</span>
@@ -303,7 +310,8 @@ export function Props(p: {
             options={assetChoices}
           />
           <p class="hint">
-            에셋 목록 전체에서 바로 골라요. "(없음)"을 고르면 그 경우엔 그림을 그리지 않아요.
+            에셋 메뉴의 그림 전체에서 바로 골라요. 처음 고른 그림은 <b>에셋</b> 탭에 별명으로 추가되고, 이 템플릿의 그림은 거기서 한꺼번에 바꾸거나 정리해요.
+            "(없음)"을 고르면 그 경우엔 그림을 그리지 않아요.
             값마다 다른 그림을 쓰려면 <b>값에 따라</b>를 누르고 파라미터를 고른 뒤, <b>모두 추가</b>(또는 + 경우)로 줄을 만들어 줄마다 그림을 골라요. 맞는 줄이 없으면 "그 밖"의 그림이 나와요.
           </p>
           <div class="field">
