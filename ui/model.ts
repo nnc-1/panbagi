@@ -246,7 +246,11 @@ export function parentOffset(spec: Spec, path: Path): { x: number; y: number } {
 export function renameParam(spec: Spec, from: string, to: string): Spec {
   const s = clone(spec);
   const params: any = {};
-  for (const [k, v] of Object.entries(s.params)) params[k === from ? to : k] = v;
+  for (const [k, v] of Object.entries(s.params)) {
+    // a dice bound can name a number param
+    if (v.type === 'random') for (const b of ['min', 'max'] as const) if (v[b] === from) v[b] = to;
+    params[k === from ? to : k] = v;
+  }
   s.params = params;
   const re = new RegExp(`\\{(\\s*)${from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s*)(?=[|}])`, 'g');
   const fix = (v: any, key?: string): any => {
@@ -270,7 +274,8 @@ export function renameParam(spec: Spec, from: string, to: string): Spec {
 export function usesParam(spec: Spec, name: string): boolean {
   const re = new RegExp(`\\{\\s*${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*[|}]`);
   const json = JSON.stringify(spec.elements);
-  return re.test(json) || json.includes(`":"${name}"`);
+  const bound = Object.values(spec.params).some((d) => d.type === 'random' && (d.min === name || d.max === name));
+  return bound || re.test(json) || json.includes(`":"${name}"`);
 }
 
 export function defaultsOf(spec: Spec): Record<string, string> {

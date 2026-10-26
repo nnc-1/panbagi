@@ -1,9 +1,12 @@
 import { useState } from 'preact/hooks';
-import { normalizeParams } from '../../src/params';
+import { HASH_KEY, HASH_MAX, normalizeParams } from '../../src/params';
 import { LIMITS, type Spec } from '../../src/spec';
 import { call, copy } from '../api';
 import { defaultsOf } from '../model';
 import { Modal, fail, toast } from '../ui';
+
+/** templates with a random param also take `hash=1..10000` in the address, mixed into every roll */
+export const takesHash = (spec: Spec) => !(HASH_KEY in spec.params) && Object.values(spec.params).some((d) => d.type === 'random');
 
 /** Encode only what would break a query value; Korean stays readable for people and chatbots. */
 export const enc = (s: string) => s.replace(/[\s%&#?+=\/\\"'<>()[\]]/g, (c) => encodeURIComponent(c).replace(/[()'[\]]/g, (x) => '%' + x.charCodeAt(0).toString(16).toUpperCase()));
@@ -16,7 +19,10 @@ export function imageUrl(chat: string, slug: string, spec: Spec, values: Record<
     .filter(([k, v]) => !onlyChanged || v !== defs[k])
     .map(([k, v]) => `${k}=${enc(typeof v === 'boolean' ? (v ? '1' : '0') : String(v))}`)
     .join('&');
-  return `${location.origin}/${chat}/${slug}.webp${q ? '?' + q : ''}`;
+  const h = Math.round(Number(values[HASH_KEY]));
+  const hq = takesHash(spec) && h >= 1 && h <= HASH_MAX ? `${HASH_KEY}=${h}` : '';
+  const all = [q, hq].filter(Boolean).join('&');
+  return `${location.origin}/${chat}/${slug}.webp${all ? '?' + all : ''}`;
 }
 
 /** Chatbot instructions generated from the parameter definitions. */
@@ -36,8 +42,9 @@ export function promptSnippet(chat: string, slug: string, name: string, spec: Sp
   return [
     `[${name} 이미지]`,
     `매 답변 끝에 현재 상태를 아래 형식의 이미지 한 줄로 출력하세요. 주소는 바꾸지 말고 ? 뒤의 값만 채웁니다.`,
-    `![](${base}?${sent.map(([k]) => `${k}=값`).join('&')})`,
+    `![](${base}?${[...sent.map(([k]) => `${k}=값`), ...(takesHash(spec) ? [`${HASH_KEY}=숫자`] : [])].join('&')})`,
     ...lines,
+    ...(takesHash(spec) ? [`- ${HASH_KEY}: 1~${HASH_MAX} 사이 아무 숫자. 매 답변마다 다른 숫자를 넣으세요(주사위를 새로 굴려요). 결과는 이미지가 정하니 미리 짐작해서 쓰지 마세요.`] : []),
     `값을 모르면 그 항목은 빼도 됩니다(기본값으로 그려짐). 글자 값의 공백은 %20으로 씁니다.`,
     `예시: ![](${example})`,
   ].join('\n');
@@ -120,6 +127,20 @@ export function PreviewPanel(p: {
           <ValueInput name={k} def={d} value={p.values[k] ?? ''} onChange={(v) => p.setValues({ ...p.values, [k]: v })} />
         </label>
         ),
+      )}
+      {takesHash(p.spec) && (
+        <label class="value">
+          <span class="mono">
+            {HASH_KEY}
+            <small> 1~{HASH_MAX}, 바꾸면 새로 굴려요</small>
+          </span>
+          <span class="with-btn">
+            <input type="number" class="num" min={1} max={HASH_MAX} value={p.values[HASH_KEY] ?? ''} placeholder="없음" onInput={(e) => p.setValues({ ...p.values, [HASH_KEY]: e.currentTarget.value })} />
+            <button class="small" onClick={() => p.setValues({ ...p.values, [HASH_KEY]: String(1 + Math.floor(Math.random() * HASH_MAX)) })}>
+              🎲 굴리기
+            </button>
+          </span>
+        </label>
       )}
       <button class="small" onClick={() => p.setValues(defaultsOf(p.spec))}>
         기본값으로
