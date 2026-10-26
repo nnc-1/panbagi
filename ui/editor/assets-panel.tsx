@@ -64,8 +64,8 @@ export function AssetsPanel(p: {
     <div class="props">
       <h4>그림</h4>
       <p class="hint">
-        이미지 요소는 그림을 <b>별명</b>(그림 옆 이름)으로 불러요. 여기서 별명이 가리키는 그림을 바꾸면, 그 별명을 쓰는 이미지가 모두 한꺼번에 바뀌어요. 이미지 요소에서
-        에셋 메뉴의 그림을 처음 고르면 여기에 자동으로 추가돼요.
+        이미지 요소는 그림을 <b>별명</b>(그림 옆 이름)으로 불러요. 여기서 별명이 가리키는 그림을 바꾸면(교체), 그 별명을 쓰는 이미지가 모두 한꺼번에 바뀌어요. 이미지 요소에서
+        그림을 고를 때는 여기에 불러온 것만 나와요. 에셋 메뉴의 그림을 아래 <b>+ 에셋 불러오기</b>로 먼저 불러와요.
       </p>
       {aliases.map(([a, n], i) => {
         const asset = p.assets.find((x) => x.name === n);
@@ -78,7 +78,7 @@ export function AssetsPanel(p: {
                 <code class="alias">{a}</code>
                 <button
                   class="ghost small danger"
-                  title="이 템플릿에서 빼기"
+                  title="불러온 에셋 빼기 (에셋 메뉴의 파일은 그대로)"
                   onClick={() => (!used || confirm(`이미지 ${used}개가 "${a}"를 써요. 빼면 그 자리가 비어요. 뺄까요?`)) && setAliases(aliases.filter((_, j) => j !== i))}
                 >
                   ✕
@@ -93,10 +93,10 @@ export function AssetsPanel(p: {
           </div>
         );
       })}
-      {!aliases.length && <p class="empty small">아직 없어요. 아래에서 고르거나, 이미지 요소의 "에셋" 칸에서 고르면 추가돼요.</p>}
+      {!aliases.length && <p class="empty small">아직 불러온 그림이 없어요. 아래 "+ 에셋 불러오기"에서 골라요.</p>}
       <div class="row">
         <select value="" onChange={(e) => e.currentTarget.value && p.onAddAlias(e.currentTarget.value)}>
-          <option value="">+ 그림 추가</option>
+          <option value="">+ 에셋 불러오기</option>
           <AssetOptions assets={p.assets.filter((x) => !aliases.some(([, n]) => n === x.name))} />
         </select>
         {unused.length > 0 && (

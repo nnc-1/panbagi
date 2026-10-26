@@ -42,7 +42,8 @@ export function Props(p: {
   assets: Asset[];
   settings: Record<string, string>;
   onChange: (patch: Record<string, unknown>) => void;
-  onAddAlias: (assetName: string) => string;
+  /** open the 에셋 tab, where pictures are loaded into the template */
+  onOpenAssets?: () => void;
   /** add a text element next to the selected one */
   onAddLabel?: (text: string) => void;
   /** line up with the canvas: left, center, right, top, middle, bottom */
@@ -56,23 +57,11 @@ export function Props(p: {
     <BindField label={label} value={e[k]} onChange={set(k)} kind={kind} params={params} {...extra} />
   );
   const aliases = Object.entries(p.spec.assets ?? {});
-  // one list for the image picker: assets this template already uses, then every other asset in the library
-  const LIB = 'lib:';
-  const used = new Set(aliases.map(([, n]) => n));
+  // the image picker offers only the pictures loaded into this template (the 에셋 tab), by alias
   const assetChoices: [string, string][] = [
     ['', '(없음)'],
     ...aliases.map(([a, n]) => [a, a === n || assetFile(n).replace(/\.[a-z0-9]+$/i, '') === a ? n : `${n} (${a})`] as [string, string]),
-    ...p.assets.filter((x) => !used.has(x.name)).map((x) => [LIB + x.name, x.name] as [string, string]),
   ];
-  // a library pick becomes an alias of this template (added on first use)
-  const fromLibrary = (v: any): any => {
-    if (typeof v === 'string') return v.startsWith(LIB) ? p.onAddAlias(v.slice(LIB.length)) : v;
-    if (v && typeof v === 'object') {
-      if ('cases' in v) return { ...v, cases: Object.fromEntries(Object.entries(v.cases).map(([k, x]) => [k, fromLibrary(x)])), default: fromLibrary(v.default) };
-      if ('stops' in v) return { ...v, stops: v.stops.map((x: any) => ({ ...x, value: fromLibrary(x.value) })), default: fromLibrary(v.default) };
-    }
-    return v;
-  };
   const hasSize = e.type !== 'group' && e.type !== 'repeat';
 
   return (
@@ -304,13 +293,23 @@ export function Props(p: {
           <BindField
             label="에셋"
             value={e.asset}
-            onChange={(v) => p.onChange({ asset: fromLibrary(v) })}
+            onChange={(v) => p.onChange({ asset: v })}
             kind="select"
             params={params}
             options={assetChoices}
           />
+          {!aliases.length && (
+            <p class="warn">
+              아직 불러온 그림이 없어요.{' '}
+              {p.onOpenAssets && (
+                <button class="small" onClick={p.onOpenAssets}>
+                  에셋 탭에서 불러오기
+                </button>
+              )}
+            </p>
+          )}
           <p class="hint">
-            에셋 메뉴의 그림 전체에서 바로 골라요. 처음 고른 그림은 <b>에셋</b> 탭에 별명으로 추가되고, 이 템플릿의 그림은 거기서 한꺼번에 바꾸거나 정리해요.
+            <b>에셋</b> 탭에 불러온 그림 중에서 골라요. 새 그림은 에셋 탭에서 먼저 불러오고, 바꾸거나 빼는 것도 거기서 해요.
             "(없음)"을 고르면 그 경우엔 그림을 그리지 않아요.
             값마다 다른 그림을 쓰려면 <b>값에 따라</b>를 누르고 파라미터를 고른 뒤, <b>모두 추가</b>(또는 + 경우)로 줄을 만들어 줄마다 그림을 골라요. 맞는 줄이 없으면 "그 밖"의 그림이 나와요.
           </p>
