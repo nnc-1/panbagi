@@ -12,9 +12,10 @@ import { Canvas } from './canvas';
 import { Layers } from './layers';
 import { CanvasProps, Props } from './props';
 import { ParamsPanel } from './params';
+import { AssetsPanel } from './assets-panel';
 import { PreviewPanel } from './preview-panel';
 
-type Tab = 'props' | 'params' | 'preview' | 'json' | 'versions';
+type Tab = 'props' | 'params' | 'assets' | 'preview' | 'json' | 'versions';
 
 function useHistory(initial: Spec) {
   const [state, setState] = useState({ past: [] as Spec[], now: initial, future: [] as Spec[], key: '' });
@@ -374,6 +375,7 @@ function EditorInner(p: { detail: TemplateDetail; onReload: (d: TemplateDetail) 
               [
                 ['props', '속성'],
                 ['params', '파라미터'],
+                ['assets', '에셋'],
                 ['preview', '값·주소'],
                 ['json', 'JSON'],
                 ['versions', '버전'],
@@ -402,7 +404,18 @@ function EditorInner(p: { detail: TemplateDetail; onReload: (d: TemplateDetail) 
               ) : (
                 <CanvasProps spec={spec} onChange={(s) => h.set(s, 'canvas')} />
               ))}
-            {tab === 'params' && <ParamsPanel spec={spec} onSpec={(s) => h.set(s, 'params')} assets={data.assets} />}
+            {tab === 'params' && <ParamsPanel spec={spec} onSpec={(s) => h.set(s, 'params')} />}
+            {tab === 'assets' && (
+              <AssetsPanel
+                spec={spec}
+                onSpec={(s) => h.set(s)}
+                assets={data.assets}
+                fonts={data.fonts}
+                settings={data.settings}
+                defaultFamily={defaultFamily}
+                onAddAlias={addAlias}
+              />
+            )}
             {tab === 'preview' && (
               <PreviewPanel chat={chat} slug={slug} name={name} spec={spec} values={values} setValues={setValues} published={published} draftDiffers={draftDiffers} />
             )}

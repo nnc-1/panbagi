@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
 import { LIMITS, type ParamDef, type Spec } from '../../src/spec';
-import type { Asset } from '../api';
-import { AssetOptions } from '../folders';
 import { renameParam, usesParam } from '../model';
 import { NumInput } from './fields';
 
@@ -162,19 +160,12 @@ function ParamCard(p: { name: string; def: ParamDef; spec: Spec; onSpec: (s: Spe
   );
 }
 
-export function ParamsPanel(p: { spec: Spec; onSpec: (s: Spec) => void; assets: Asset[] }) {
+export function ParamsPanel(p: { spec: Spec; onSpec: (s: Spec) => void }) {
   const [newName, setNewName] = useState('');
   const add = () => {
     if (!NAME.test(newName) || newName in p.spec.params) return;
     p.onSpec({ ...p.spec, params: { ...p.spec.params, [newName]: { type: 'number', default: 0, min: 0, max: 100 } } });
     setNewName('');
-  };
-  const aliases = Object.entries(p.spec.assets ?? {});
-  const setAliases = (list: [string, string][]) => {
-    const assets = Object.fromEntries(list);
-    const s: Spec = { ...p.spec, assets };
-    if (!list.length) delete s.assets;
-    p.onSpec(s);
   };
   return (
     <div class="props">
@@ -190,22 +181,7 @@ export function ParamsPanel(p: { spec: Spec; onSpec: (s: Spec) => void; assets: 
         </button>
       </div>
 
-      <h4>이 템플릿이 쓰는 에셋</h4>
-      <p class="hint">템플릿은 에셋을 별명으로 불러요. 별명을 그대로 두고 에셋만 바꾸면 모든 이미지 요소가 따라 바뀌어요.</p>
-      {aliases.map(([a, n], i) => (
-        <div class="row" key={i}>
-          <code class="alias">{a}</code>
-          <span>→</span>
-          <select value={n} onChange={(e) => setAliases(aliases.map((x, j) => (j === i ? [x[0], e.currentTarget.value] : x)))}>
-            {!p.assets.some((x) => x.name === n) && <option value={n}>{n} (없음)</option>}
-            <AssetOptions assets={p.assets} />
-          </select>
-          <button class="ghost small danger" onClick={() => setAliases(aliases.filter((_, j) => j !== i))}>
-            ✕
-          </button>
-        </div>
-      ))}
-      {!aliases.length && <p class="empty small">아직 없어요. 이미지 요소의 "라이브러리에서 고르기"로 추가돼요.</p>}
+      <p class="hint">그림과 폰트는 <b>에셋</b> 탭에서 관리해요.</p>
     </div>
   );
 }
